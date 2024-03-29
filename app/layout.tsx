@@ -50,13 +50,17 @@ export default function RootLayout({
           )}>
             <ModePicker />
           </div>
-          <h1 className="p-3 self-end text-2xl border-b-4 border-solid border-foreground dark:border-foreground-dark">
-            <Link href="/">
-              Luke Schaack
+          <div className="flex border-b-4 border-solid border-foreground dark:border-foreground-dark">
+            <Link href="/" className="px-6 py-3 h-full self-stretch text-2xl">
+              <h1>
+                Luke Schaack
+              </h1>
             </Link>
-          </h1>
+          </div>
           <SideNav />
-          {children}
+          <main className="p-6 flex flex-col">
+            {children}
+          </main>
         </div>
       </body>
     </html>

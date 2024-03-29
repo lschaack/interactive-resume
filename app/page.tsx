@@ -2,8 +2,8 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <main className="p-3 flex flex-col">
-      eyyyy
-    </main>
+    <h2 className="text-xl">
+      About
+    </h2>
   );
 }

@@ -7,6 +7,7 @@ import { ModePicker } from "./components/ModePicker";
 import { FC } from "react";
 import { usePathname } from "next/navigation";
 import { SideNav } from "./components/SideNav";
+import clsx from "clsx";
 
 const noto_sans = Noto_Sans({
   subsets: ['latin'],
@@ -36,9 +37,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${materialSymbols.variable} transition-colors`}>
-      <body className={`${noto_sans.className} bg-background text-foreground dark:bg-background-dark dark:text-foreground-dark`}>
+      <body className={clsx(
+        noto_sans.className,
+        'bg-background text-foreground',
+        'dark:bg-background-dark dark:text-foreground-dark'
+      )}>
         <div className="grid grid-rows-layout grid-cols-layout p-6">
-          <div className="h-full border-r-4 border-b-4 border-solid border-foreground dark:border-foreground-dark flex justify-center items-center">
+          <div className={clsx(
+            'h-full',
+            'border-r-4 border-b-4 border-solid border-foreground dark:border-foreground-dark',
+            'flex justify-center items-center',
+          )}>
             <ModePicker />
           </div>
           <h1 className="p-3 self-end text-2xl border-b-4 border-solid border-foreground dark:border-foreground-dark">

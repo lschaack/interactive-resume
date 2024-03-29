@@ -59,7 +59,7 @@ const NavEntry: FC<NavEntryProps> = ({ section: { name, pathname } }) => {
 
 export const SideNav = () => {
   return (
-    <nav className="flex flex-col pt-3 h-full border-r-4 border-solid border-foreground dark:border-foreground-dark">
+    <nav className="flex flex-col h-full border-r-4 border-solid border-foreground dark:border-foreground-dark">
       {SECTIONS.map(section => <NavEntry key={section.name} section={section} />)}
     </nav>
   );

@@ -41,7 +41,11 @@ export default function RootLayout({
           <div className="h-full border-r-4 border-b-4 border-solid border-black dark:border-white flex justify-center items-center">
             <ModePicker />
           </div>
-          <h1 className="p-3 self-end text-2xl border-b-4 border-solid border-black dark:border-white">Luke Schaack</h1>
+          <h1 className="p-3 self-end text-2xl border-b-4 border-solid border-black dark:border-white">
+            <Link href="/">
+              Luke Schaack
+            </Link>
+          </h1>
           <SideNav />
           {children}
         </div>

@@ -1,5 +1,7 @@
 import type { Config } from "tailwindcss";
 
+import colors from 'tailwindcss/colors';
+
 const config: Config = {
   darkMode: 'selector', // TODO: unset this when dark/light styles are figured out and I'm confident in them
   content: [
@@ -8,6 +10,29 @@ const config: Config = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    colors: {
+      ...colors,
+      foreground: {
+        light: colors.black,
+        DEFAULT: colors.black,
+        dark: colors.white,
+      },
+      background: {
+        light: colors.white,
+        DEFAULT: colors.white,
+        dark: colors.black,
+      },
+      highlight: {
+        light: colors.slate['100'],
+        DEFAULT: colors.slate['100'],
+        dark: colors.slate['800'],
+      },
+      accent: {
+        light: colors.amber[500],
+        DEFAULT: colors.amber[500],
+        dark: colors.amber[500],
+      }
+    },
     extend: {
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
@@ -21,9 +46,7 @@ const config: Config = {
         "layout": "fit-content(200px) auto"
       },
       boxShadow: {
-        "border-r": "1px 0 1px black",
-        "border-b": "0 1px 1px black",
-        "border-corner": "1px 0 1px black, 0 1px 1px black"
+        "outline": '0 0 0 4px theme(colors.accent.DEFAULT)',
       },
       fontFamily: {
         sans: ["var(--font-noto-sans)"]

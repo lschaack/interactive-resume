@@ -2,6 +2,8 @@
 
 import { useRef } from "react";
 
+import clsx from "clsx";
+
 const getIsLight = (element: Element | null) => {
   return element?.classList.contains('light') || !element?.classList.contains('dark');
 }
@@ -10,7 +12,7 @@ export const ModePicker = ({ className }: { className?: string }) => {
   const wrapperElement = useRef<HTMLDivElement>(null);
 
   return (
-    <label className={`relative ${className}`}>
+    <label className={clsx('relative', 'focus-within:shadow-outline', className)}>
       <input
         type="checkbox"
         className="appearance-none absolute"

@@ -5,6 +5,8 @@ import { FC } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import clsx from "clsx";
+
 type Section = {
   name: string;
   pathname: string;
@@ -41,7 +43,15 @@ const NavEntry: FC<NavEntryProps> = ({ section: { name, pathname } }) => {
   const isSelected = pathname === currentPathname;
 
   return (
-    <Link href={pathname} className={`hover:bg-slate-100 focus:bg-slate-100 focus:outline-none dark:hover:bg-slate-800 ${isSelected ? 'bg-slate-100 dark:bg-slate-800' : ''}`}>
+    <Link
+      href={pathname}
+      className={clsx(
+        'outline-none',
+        'hover:bg-highlight focus:bg-highlight',
+        'dark:hover:bg-highlight-dark dark:focus:bg-highlight-dark',
+        isSelected ? 'bg-highlight dark:bg-highlight-dark' : ''
+      )}
+    >
       <p className="px-4 py-2 bg-inherit transition-colors">{name}</p>
     </Link>
   );
@@ -49,7 +59,7 @@ const NavEntry: FC<NavEntryProps> = ({ section: { name, pathname } }) => {
 
 export const SideNav = () => {
   return (
-    <nav className="pt-3 h-full border-r-4 border-solid border-black dark:border-white">
+    <nav className="flex flex-col pt-3 h-full border-r-4 border-solid border-foreground dark:border-foreground-dark">
       {SECTIONS.map(section => <NavEntry key={section.name} section={section} />)}
     </nav>
   );

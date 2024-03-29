@@ -36,12 +36,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${materialSymbols.variable} transition-colors`}>
-      <body className={`${noto_sans.className} bg-white text-black dark:bg-black dark:text-white`}>
+      <body className={`${noto_sans.className} bg-background text-foreground dark:bg-background-dark dark:text-foreground-dark`}>
         <div className="grid grid-rows-layout grid-cols-layout p-6">
-          <div className="h-full border-r-4 border-b-4 border-solid border-black dark:border-white flex justify-center items-center">
+          <div className="h-full border-r-4 border-b-4 border-solid border-foreground dark:border-foreground-dark flex justify-center items-center">
             <ModePicker />
           </div>
-          <h1 className="p-3 self-end text-2xl border-b-4 border-solid border-black dark:border-white">
+          <h1 className="p-3 self-end text-2xl border-b-4 border-solid border-foreground dark:border-foreground-dark">
             <Link href="/">
               Luke Schaack
             </Link>

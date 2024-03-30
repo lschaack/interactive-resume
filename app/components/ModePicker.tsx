@@ -8,6 +8,8 @@ const getIsLight = (element: Element | null) => {
   return element?.classList.contains('light') || !element?.classList.contains('dark');
 }
 
+// TODO: make this more reusable as a demo even though I won't need to reuse it
+// TODO: persist mode in localStorage so it doesn't change on a full-page rerender (like 404)
 export const ModePicker = ({ className }: { className?: string }) => {
   const wrapperElement = useRef<HTMLDivElement>(null);
 

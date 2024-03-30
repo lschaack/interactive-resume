@@ -13,7 +13,8 @@ const noto_sans = Noto_Sans({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-noto-sans',
-  weight: '600'
+  // TODO: get rid of unused font weights
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
 });
 
 // https://github.com/vercel/next.js/discussions/42881#discussioncomment-5952355
@@ -23,7 +24,7 @@ const materialSymbols = localFont({
   src: '../node_modules/material-symbols/material-symbols-rounded.woff2',
   display: 'block',
   weight: '600',
-})
+});
 
 export const metadata: Metadata = {
   title: "Luke Schaack Interactive Resume",
@@ -36,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${materialSymbols.variable} transition-colors`}>
+    <html lang="en" className={`${materialSymbols.variable} transition-colors font-semibold`}>
       <body className={clsx(
         noto_sans.className,
         'bg-background text-foreground',

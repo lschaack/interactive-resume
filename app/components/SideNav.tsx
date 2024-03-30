@@ -34,6 +34,10 @@ export const SECTIONS: Section[] = [
     name: 'Skills',
     pathname: '/skills',
   },
+  {
+    name: 'Minesweeper',
+    pathname: '/minesweeper'
+  }
 ];
 
 type NavEntryProps = {

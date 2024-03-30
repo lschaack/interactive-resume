@@ -1,43 +1,44 @@
 import { inRange } from 'lodash/fp';
 
 class Tile {
-  x: number;
-  y: number;
+  col: number;
+  row: number;
   id: string;
 
   isOpen: boolean;
   isMine: boolean;
   isFlag: boolean;
 
-  constructor(x: number, y: number) {
-    this.x = x;
-    this.y = y;
-    this.id = `${x},${y}`;
+  constructor(row: number, col: number) {
+    this.col = col;
+    this.row = row;
+    this.id = `${row},${col}`;
     this.isOpen = false;
     this.isMine = false;
     this.isFlag = false;
   }
 
   getCell(): Cell {
-    return [this.x, this.y];
+    return [this.row, this.col];
   }
 }
 
 type Cell = [number, number];
 type Direction = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 
+// to make it easier to work w/a grid layout, use row,col instead of x,y
 const MOVES: Record<Direction, Cell> = {
-  N:  [ 0,  1],
-  NE: [ 1,  1],
-  E:  [ 1,  0],
-  SE: [ 1, -1],
-  S:  [ 0, -1],
-  SW: [-1, -1],
-  W:  [-1,  0],
-  NW: [-1,  1],
+  N:  [-1,  0],
+  NE: [-1,  1],
+  E:  [ 0,  1],
+  SE: [ 1,  1],
+  S:  [ 1,  0],
+  SW: [ 1, -1],
+  W:  [ 0, -1],
+  NW: [-1, -1],
 };
 
-const addCells = ([xA, yA]: Cell, [xB, yB]: Cell): Cell => [xA + xB, yA + yB];
+const addCells = ([rowA, colA]: Cell, [rowB, colB]: Cell): Cell => [rowA + rowB, colA + colB];
 const sum = (a: number, b: number) => a + b;
 
 export class MinesweeperBoard {
@@ -55,30 +56,13 @@ export class MinesweeperBoard {
 
     this.board = Array.from(
       { length: height },
-      (_, y) => Array.from(
+      (_, row) => Array.from(
         { length: width },
-        (_, x) => new Tile(x, y)
+        (_, col) => new Tile(row, col)
       )
     );
 
     this.setMines();
-    this.setFlags();
-  }
-
-  // TODO: delete
-  setFlags() {
-    let nChosen = 0;
-
-    while (nChosen < this.nMines) {
-      // TODO: check that this gets every cell
-      const row = Math.floor(Math.random() * this.height);
-      const col = Math.floor(Math.random() * this.width);
-
-      if (!this.board[row][col].isFlag) {
-        this.board[row][col].isFlag = true;
-        nChosen += 1;
-      }
-    }
   }
 
   setMines() {
@@ -96,17 +80,17 @@ export class MinesweeperBoard {
     }
   }
 
-  isValidCell([x, y]: Cell) {
-    return inRange(0, this.width, x) && inRange(0, this.height, y);
+  isValidCell([row, col]: Cell) {
+    return inRange(0, this.height, row) && inRange(0, this.width, col);
   }
 
   getNeighbor(mine: Tile, direction: Direction) {
     const neighborCell = addCells(mine.getCell(), MOVES[direction]);
 
     if (this.isValidCell(neighborCell)) {
-      const [x, y] = neighborCell;
+      const [row, col] = neighborCell;
 
-      return this.board[x][y];
+      return this.board[row][col];
     } else {
       return null;
     }

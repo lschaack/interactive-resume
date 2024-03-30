@@ -1,13 +1,16 @@
+import { FC } from "react";
 import type { Metadata } from "next";
 import { Noto_Sans } from "next/font/google";
 import localFont from 'next/font/local';
-import "./globals.css";
 import Link from "next/link";
-import { ModePicker } from "./components/ModePicker";
-import { FC } from "react";
-import { usePathname } from "next/navigation";
-import { SideNav } from "./components/SideNav";
+
 import clsx from "clsx";
+import "./globals.css";
+
+import { ModePicker } from "./components/ModePicker";
+import { SideNav } from "./components/SideNav";
+import { NavProvider } from "./components/NavProvider";
+import { Header } from "./components/Header";
 
 const noto_sans = Noto_Sans({
   subsets: ['latin'],
@@ -43,26 +46,19 @@ export default function RootLayout({
         'bg-background text-foreground',
         'dark:bg-background-dark dark:text-foreground-dark'
       )}>
-        <div className="grid grid-rows-layout grid-cols-layout p-6">
+        <NavProvider>
           <div className={clsx(
-            'h-full',
-            'border-r-4 border-b-4 border-solid border-foreground dark:border-foreground-dark',
-            'flex justify-center items-center',
+            'grid sm:p-6',
+            'grid-rows-layout-mobile grid-cols-layout-mobile',
+            'sm:grid-rows-layout-desktop sm:grid-cols-layout-desktop'
           )}>
-            <ModePicker />
+            <Header />
+            <SideNav />
+            <main className="p-6 flex flex-col">
+              {children}
+            </main>
           </div>
-          <div className="flex border-b-4 border-solid border-foreground dark:border-foreground-dark">
-            <Link href="/" className="px-6 py-3 h-full self-stretch text-2xl">
-              <h1>
-                Luke Schaack
-              </h1>
-            </Link>
-          </div>
-          <SideNav />
-          <main className="p-6 flex flex-col">
-            {children}
-          </main>
-        </div>
+        </NavProvider>
       </body>
     </html>
   );

@@ -40,10 +40,12 @@ const config: Config = {
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
       gridTemplateRows: {
-        "layout": "64px auto"
+        "layout-desktop": "minmax(64px, auto) auto",
+        "layout-mobile": "minmax(64px, auto) auto",
       },
       gridTemplateColumns: {
-        "layout": "fit-content(200px) auto"
+        "layout-desktop": "fit-content(200px) auto",
+        "layout-mobile": "auto",
       },
       boxShadow: {
         "outline": '0 0 0 4px theme(colors.accent.DEFAULT)',

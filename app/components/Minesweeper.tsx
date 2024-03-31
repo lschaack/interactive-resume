@@ -1,29 +1,35 @@
 "use client"
 
 import Image from "next/image"
-import { FC, ReactNode, memo, useReducer, useState } from "react"
+import { FC, MouseEventHandler, ReactNode, memo, useReducer, useState } from "react"
 import clsx from "clsx";
 
 import { MinesweeperBoard, Tile } from "../minesweeper/engine";
 
+// TODO: monospace font
 type TileProps = {
-  onClick: () => void;
+  onClick: MouseEventHandler;
+  onContextMenu: MouseEventHandler;
   children?: ReactNode;
+  className?: string | false | undefined;
 };
-const ClosedTile: FC<TileProps & { children?: ReactNode }> = ({ onClick, children }) => {
+const ClosedTile: FC<TileProps & { children?: ReactNode }> = ({ onClick, onContextMenu, className, children }) => {
   return (
     <button
       onClick={onClick}
+      onContextMenu={onContextMenu}
       tabIndex={0}
       className={clsx(
+        className,
+        'font-bold',
         'flex justify-center items-center',
         'bg-slate-400',
         'border-4 border-solid',
         'border-l-slate-200 border-t-slate-200',
         'border-r-slate-600 border-b-slate-600',
-        'active:border-2',
-        'active:border-l-slate-600 active:border-t-slate-600',
-        'active:border-r-slate-400 active:border-b-slate-400',
+        '[&:not(.flag)]:active:border-2',
+        '[&:not(.flag)]:active:border-l-slate-600 [&:not(.flag)]:active:border-t-slate-600',
+        '[&:not(.flag)]:active:border-r-slate-400 [&:not(.flag)]:active:border-b-slate-400',
         // TODO: focus styles
         // 'outline-none focus:shadow-outline',
       )}
@@ -32,12 +38,15 @@ const ClosedTile: FC<TileProps & { children?: ReactNode }> = ({ onClick, childre
     </button>
   )
 }
-const OpenTile: FC<TileProps & { children?: ReactNode }> = ({ onClick, children }) => {
+const OpenTile: FC<TileProps & { children?: ReactNode }> = ({ onClick, onContextMenu, className, children }) => {
   return (
     <button
       onClick={onClick}
+      onContextMenu={onContextMenu}
       tabIndex={-1}
       className={clsx(
+        className,
+        'font-bold',
         'flex justify-center items-center',
         'bg-slate-400',
         'border-l-2 border-t-2 border-solid border-slate-600',
@@ -53,6 +62,10 @@ const OpenTile: FC<TileProps & { children?: ReactNode }> = ({ onClick, children 
 const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
   function MinesweeperTile({ tile, board }) {
     const handleClick = () => board.open(tile);
+    const handleContextMenu: MouseEventHandler = e => {
+      e.preventDefault();
+      board.flag(tile);
+    }
 
     if (tile.isOpen) {
       if (tile.isMine) {
@@ -60,7 +73,10 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
         const icon = tile.isFlag ? 'MineWrong' : 'Mine';
 
         return (
-          <OpenTile onClick={handleClick}>
+          <OpenTile
+            onClick={handleClick}
+            onContextMenu={handleContextMenu}
+          >
             <Image
               src={`${icon}.svg`}
               height={24}
@@ -76,14 +92,22 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
 
         // TODO: different colors for different numbers of mines
         return (
-          <OpenTile onClick={handleClick}>
+          <OpenTile
+            onClick={handleClick}
+            onContextMenu={handleContextMenu}
+            className={!contents && 'pointer-events-none'}
+          >
             {contents}
           </OpenTile>
         );
       }
     } else {
       return (
-        <ClosedTile onClick={handleClick}>
+        <ClosedTile
+          onClick={handleClick}
+          onContextMenu={handleContextMenu}
+          className={tile.isFlag && 'flag'}
+        >
           {tile.isFlag && (
             <Image
               src="Flag.svg"
@@ -107,6 +131,7 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
   }
 );
 
+// TODO: add keyboard interactivity to this including arrow key focus navigation
 export default function Minesweeper() {
   const [width, setWidth] = useState(30);
   const [height, setHeight] = useState(30);
@@ -119,6 +144,7 @@ export default function Minesweeper() {
       display: 'grid',
       gridTemplateColumns: `repeat(${width}, 24px)`,
       gridTemplateRows: `repeat(${height}, 24px)`,
+      pointerEvents: board.status === 'lost' ? 'none' : 'unset',
     }}>
       {board.board.map(row => (
         row.map(tile => {

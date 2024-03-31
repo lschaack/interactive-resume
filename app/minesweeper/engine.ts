@@ -8,6 +8,7 @@ export class Tile {
   isOpen: boolean;
   isMine: boolean;
   isFlag: boolean;
+  isCulprit: boolean;
 
   constructor(row: number, col: number) {
     this.col = col;
@@ -16,6 +17,7 @@ export class Tile {
     this.isOpen = false;
     this.isMine = false;
     this.isFlag = false;
+    this.isCulprit = false;
   }
 
   getCell(): Cell {
@@ -39,7 +41,6 @@ const MOVES: Record<Direction, Cell> = {
 };
 
 const addCells = ([rowA, colA]: Cell, [rowB, colB]: Cell): Cell => [rowA + rowB, colA + colB];
-const sum = (a: number, b: number) => a + b;
 
 export class MinesweeperBoard {
   board: Tile[][];
@@ -47,14 +48,14 @@ export class MinesweeperBoard {
   width: number;
   nMines: number;
   status: 'won' | 'lost' | 'playing';
-  onFinishOpen?: () => void;
+  onChange?: () => void;
 
-  constructor(height: number, width: number, nMines: number, onFinishOpen?: () => void) {
+  constructor(height: number, width: number, nMines: number, onChange?: () => void) {
     this.height = height;
     this.width = width;
     this.nMines = nMines;
     this.status = 'playing';
-    this.onFinishOpen = onFinishOpen;
+    this.onChange = onChange;
 
     this.board = Array.from(
       { length: height },
@@ -120,46 +121,76 @@ export class MinesweeperBoard {
       .filter(mine => mine.isFlag);
   }
 
-  flag(mine: Tile) {
-    mine.isFlag = !mine.isFlag;
+  getAllFlags() {
+    return this
+      .board
+      .flatMap(row => row.filter(tile => tile.isFlag));
   }
 
-  doOpen(mine: Tile, visited: Set<string>) {
+  getAllMines() {
+    return this
+      .board
+      .flatMap(row => row.filter(tile => tile.isMine));
+  }
+
+  flag(mine: Tile) {
+    mine.isFlag = !mine.isFlag;
+
+    this.onChange?.();
+  }
+
+  doOpen(mine: Tile) {
     if (!mine.isFlag) {
       mine.isOpen = true;
 
       if (mine.isMine) this.lose();
     }
-
-    visited.add(mine.id);
   }
 
-  // Routes to openNeighbors if applicable, doOpen does the actual work
+  // Opens recursively if applicable, doOpen does the actual work
   open(mine: Tile, visited = new Set<string>()) {
-    this.doOpen(mine, visited);
-
-    const numNeighborMines = this.getNeighborMines(mine).length;
-
-    if (numNeighborMines === 0 || numNeighborMines === this.getNeighborFlags(mine).length) {
-      // Open all neighbors
-      this
-        .getNeighbors(mine)
-        .forEach(neighbor => {
-          if (!visited.has(neighbor.id) && !neighbor.isOpen) {
-            // TODO: define boundary where this stops
-            this.open(neighbor, visited);
-          }
-        })
+    if (!mine.isFlag) {
+      this.doOpen(mine);
+      visited.add(mine.id);
+  
+      const numNeighborMines = this.getNeighborMines(mine).length;
+  
+      if (numNeighborMines === 0 || numNeighborMines === this.getNeighborFlags(mine).length) {
+        // Open all neighbors
+        this
+          .getNeighbors(mine)
+          .forEach(neighbor => {
+            if (!visited.has(neighbor.id) && !neighbor.isOpen) {
+              // TODO: define boundary where this stops
+              this.open(neighbor, visited);
+            }
+          })
+      }
+  
+      if (this.status === 'lost') mine.isCulprit = true;
+  
+      this.onChange?.();
     }
-
-    this.onFinishOpen?.();
   }
 
+  // TODO: this will re-render twice since it gets called from doOpen...
+  // not a big issue but is there any chance I would need to call lose()
+  // from any other context?
   lose() {
     this.status = 'lost';
+    this
+      .getAllMines()
+      .forEach(mine => {
+        if (!mine.isOpen) this.doOpen(mine);
+      });
+
+    this.onChange?.();
   }
 
+  // TODO: call win
   win() {
     this.status = 'won';
+
+    this.onChange?.();
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useEffect } from "react";
+import { FC, KeyboardEventHandler, useEffect } from "react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { MAX_MOBILE_SCREEN_WIDTH, useNav } from "./NavProvider";
 import { IconButton } from "./IconButton";
+import FocusTrap from "focus-trap-react";
 
 type Section = {
   name: string;
@@ -59,27 +60,52 @@ const NavEntry: FC<NavEntryProps> = ({ section: { name, pathname }, autoFocus = 
 
 export const SideNav = () => {
   // NOTE: isOpen only has an effect on mobile - on desktop the nav is always open
-  const { isOpen, setIsOpen } = useNav();
+  const { isOpen, setIsOpen, isMobile } = useNav();
+  const pathname = usePathname();
+
+  // automatically close on navigation
+  useEffect(() => setIsOpen(false), [pathname, setIsOpen]);
+
+  const isFocusTrapActive = isMobile && isOpen;
 
   return (
-    <nav className={clsx(
-      'h-full w-fit',
-      'hidden sm:flex',
-      isOpen && '!flex',
-      'absolute sm:static',
-      'border-r-4 border-solid border-foreground dark:border-foreground-dark',
-      'bg-background dark:bg-background-dark',
-    )}>
-      <div className="flex flex-col">
-        {SECTIONS.map((section, index) => (
-          <NavEntry key={section.name} section={section} autoFocus={index === 0} />
-        ))}
-      </div>
+    <>
+      {isFocusTrapActive && (
+        <div
+          className={clsx(
+            'z-40',
+            'absolute w-full h-full',
+            'bg-slate-800 bg-opacity-50',
+            'cursor-not-allowed',
+          )}
+        />
+      )}
+      <FocusTrap active={isFocusTrapActive} focusTrapOptions={{ onDeactivate: () => setIsOpen(false) }}>
+        <nav className={clsx(
+          'z-50',
+          'h-full w-fit',
+          'hidden sm:flex',
+          isOpen && '!flex',
+          'absolute sm:static',
+          'border-r-4 border-solid border-foreground dark:border-foreground-dark',
+          'bg-background dark:bg-background-dark',
+        )}>
+          <div className="flex flex-col">
+            {SECTIONS.map((section, index) => (
+              <NavEntry
+                key={section.name}
+                section={section}
+                autoFocus={index === 0}
+              />
+            ))}
+          </div>
 
-      <IconButton onClick={() => setIsOpen(false)} className="self-start p-2 m-1">
-        close
-      </IconButton>
-    </nav>
+          <IconButton onClick={() => setIsOpen(false)} className="self-start p-2 m-1">
+            close
+          </IconButton>
+        </nav>
+      </FocusTrap>
+    </>
   );
 }
 

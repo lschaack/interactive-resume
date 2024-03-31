@@ -87,8 +87,8 @@ export class MinesweeperBoard {
     return inRange(0, this.height, row) && inRange(0, this.width, col);
   }
 
-  getNeighbor(mine: Tile, direction: Direction) {
-    const neighborCell = addCells(mine.getCell(), MOVES[direction]);
+  getNeighbor(tile: Tile, direction: Direction) {
+    const neighborCell = addCells(tile.getCell(), MOVES[direction]);
 
     if (this.isValidCell(neighborCell)) {
       const [row, col] = neighborCell;
@@ -100,24 +100,24 @@ export class MinesweeperBoard {
   }
 
   // TODO: memoize
-  getNeighbors(mine: Tile) {
+  getNeighbors(tile: Tile) {
     return Object
       .keys(MOVES)
-      .map(direction => this.getNeighbor(mine, direction as Direction))
+      .map(direction => this.getNeighbor(tile, direction as Direction))
       .filter(Boolean) as Tile[];
   }
 
   // TODO: memoize
-  getNeighborMines(mine: Tile) {
+  getNeighborMines(tile: Tile) {
     return this
-      .getNeighbors(mine)
+      .getNeighbors(tile)
       .filter(mine => mine.isMine);
   }
 
   // TODO: memoize
-  getNeighborFlags(mine: Tile) {
+  getNeighborFlags(tile: Tile) {
     return this
-      .getNeighbors(mine)
+      .getNeighbors(tile)
       .filter(mine => mine.isFlag);
   }
 
@@ -133,32 +133,33 @@ export class MinesweeperBoard {
       .flatMap(row => row.filter(tile => tile.isMine));
   }
 
-  flag(mine: Tile) {
-    mine.isFlag = !mine.isFlag;
+  flag(tile: Tile) {
+    tile.isFlag = !tile.isFlag;
 
     this.onChange?.();
   }
 
-  doOpen(mine: Tile) {
-    if (!mine.isFlag) {
-      mine.isOpen = true;
+  doOpen(tile: Tile) {
+    if (!tile.isFlag) {
+      tile.isOpen = true;
 
-      if (mine.isMine) this.lose();
+      if (tile.isMine) this.lose();
     }
   }
 
   // Opens recursively if applicable, doOpen does the actual work
-  open(mine: Tile, visited = new Set<string>()) {
-    if (!mine.isFlag) {
-      this.doOpen(mine);
-      visited.add(mine.id);
+  // FIXME: rules for when a square is open-able are seemingly broken
+  open(tile: Tile, visited = new Set<string>()) {
+    if (!tile.isFlag) {
+      this.doOpen(tile);
+      visited.add(tile.id);
   
-      const numNeighborMines = this.getNeighborMines(mine).length;
+      const numNeighborMines = this.getNeighborMines(tile).length;
   
-      if (numNeighborMines === 0 || numNeighborMines === this.getNeighborFlags(mine).length) {
+      if (numNeighborMines === 0 || numNeighborMines === this.getNeighborFlags(tile).length) {
         // Open all neighbors
         this
-          .getNeighbors(mine)
+          .getNeighbors(tile)
           .forEach(neighbor => {
             if (!visited.has(neighbor.id) && !neighbor.isOpen) {
               // TODO: define boundary where this stops
@@ -167,7 +168,7 @@ export class MinesweeperBoard {
           })
       }
   
-      if (this.status === 'lost') mine.isCulprit = true;
+      if (this.status === 'lost') tile.isCulprit = true;
   
       this.onChange?.();
     }
@@ -180,8 +181,8 @@ export class MinesweeperBoard {
     this.status = 'lost';
     this
       .getAllMines()
-      .forEach(mine => {
-        if (!mine.isOpen) this.doOpen(mine);
+      .forEach(tile => {
+        if (!tile.isOpen) this.doOpen(tile);
       });
 
     this.onChange?.();

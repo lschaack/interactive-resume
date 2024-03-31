@@ -27,14 +27,6 @@ export const SECTIONS: Section[] = [
     pathname: '/education',
   },
   {
-    name: 'Tools',
-    pathname: '/tools',
-  },
-  {
-    name: 'Skills',
-    pathname: '/skills',
-  },
-  {
     name: 'Minesweeper',
     pathname: '/minesweeper'
   }

@@ -31,7 +31,7 @@ const EducationItem: FC<EducationItemProps> = ({
 
 export default function Education() {
   return (
-    <div className="flex flex-col gap-y-3">
+    <>
       <h2 className="text-xl">
         Education
       </h2>
@@ -59,6 +59,6 @@ export default function Education() {
           ]}
         />
       </ul>
-    </div>
+    </>
   );
 }

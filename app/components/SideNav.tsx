@@ -58,25 +58,17 @@ const NavEntry: FC<NavEntryProps> = ({ section: { name, pathname }, autoFocus = 
 }
 
 export const SideNav = () => {
+  // NOTE: isOpen only has an effect on mobile - on desktop the nav is always open
   const { isOpen, setIsOpen } = useNav();
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsOpen(window.innerWidth > MAX_MOBILE_SCREEN_WIDTH)
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => window.removeEventListener('resize', handleResize);
-  });
 
   return (
     <nav className={clsx(
-      'h-full flex',
+      'h-full w-fit',
+      'hidden sm:flex',
+      isOpen && '!flex',
       'absolute sm:static',
       'border-r-4 border-solid border-foreground dark:border-foreground-dark',
       'bg-background dark:bg-background-dark',
-      isOpen ? 'w-fit' : 'hidden',
     )}>
       <div className="flex flex-col">
         {SECTIONS.map((section, index) => (

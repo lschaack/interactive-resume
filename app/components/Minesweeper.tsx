@@ -81,7 +81,7 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
               src={`${icon}.svg`}
               height={24}
               width={24}
-              alt="flag (closed)"
+              alt="flag (open)"
             />
           </OpenTile>
         );

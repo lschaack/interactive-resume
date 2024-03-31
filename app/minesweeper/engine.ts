@@ -50,12 +50,18 @@ export class MinesweeperBoard {
   status: 'won' | 'lost' | 'playing';
   onChange?: () => void;
 
+  mines: Set<Tile>;
+  flags: Set<Tile>;
+
   constructor(height: number, width: number, nMines: number, onChange?: () => void) {
     this.height = height;
     this.width = width;
     this.nMines = nMines;
     this.status = 'playing';
     this.onChange = onChange;
+
+    this.mines = new Set<Tile>();
+    this.flags = new Set<Tile>();
 
     this.board = Array.from(
       { length: height },
@@ -69,16 +75,17 @@ export class MinesweeperBoard {
   }
 
   setMines() {
-    let nChosen = 0;
-
-    while (nChosen < this.nMines) {
+    while (this.mines.size < this.nMines) {
       // TODO: check that this gets every cell
       const row = Math.floor(Math.random() * this.height);
       const col = Math.floor(Math.random() * this.width);
 
-      if (!this.board[row][col].isMine) {
-        this.board[row][col].isMine = true;
-        nChosen += 1;
+      const chosenTile = this.board[row][col];
+
+      if (!chosenTile.isMine) {
+        chosenTile.isMine = true;
+
+        this.mines.add(chosenTile);
       }
     }
   }
@@ -121,20 +128,11 @@ export class MinesweeperBoard {
       .filter(mine => mine.isFlag);
   }
 
-  getAllFlags() {
-    return this
-      .board
-      .flatMap(row => row.filter(tile => tile.isFlag));
-  }
-
-  getAllMines() {
-    return this
-      .board
-      .flatMap(row => row.filter(tile => tile.isMine));
-  }
-
   flag(tile: Tile) {
     tile.isFlag = !tile.isFlag;
+
+    if (tile.isFlag) this.flags.add(tile);
+    else this.flags.delete(tile);
 
     this.onChange?.();
   }
@@ -167,9 +165,13 @@ export class MinesweeperBoard {
             }
           })
       }
-  
-      if (this.status === 'lost') tile.isCulprit = true;
-  
+
+      if (this.status === 'lost') {
+        tile.isCulprit = true;
+      } else if ([...this.mines].every(mine => this.flags.has(mine))) {
+        this.win();
+      }
+
       this.onChange?.();
     }
   }
@@ -179,11 +181,11 @@ export class MinesweeperBoard {
   // from any other context?
   lose() {
     this.status = 'lost';
-    this
-      .getAllMines()
-      .forEach(tile => {
-        if (!tile.isOpen) this.doOpen(tile);
-      });
+    // reveal all mines on loss
+    // FIXME: handle correct/incorrect flags
+    this.mines.forEach(tile => {
+      if (!tile.isOpen) this.doOpen(tile);
+    });
 
     this.onChange?.();
   }

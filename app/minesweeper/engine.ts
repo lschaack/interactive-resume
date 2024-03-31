@@ -1,6 +1,6 @@
 import { inRange } from 'lodash/fp';
 
-class Tile {
+export class Tile {
   col: number;
   row: number;
   id: string;
@@ -47,12 +47,14 @@ export class MinesweeperBoard {
   width: number;
   nMines: number;
   status: 'won' | 'lost' | 'playing';
+  onFinishOpen?: () => void;
 
-  constructor(height: number, width: number, nMines: number) {
+  constructor(height: number, width: number, nMines: number, onFinishOpen?: () => void) {
     this.height = height;
     this.width = width;
     this.nMines = nMines;
     this.status = 'playing';
+    this.onFinishOpen = onFinishOpen;
 
     this.board = Array.from(
       { length: height },
@@ -149,6 +151,8 @@ export class MinesweeperBoard {
           }
         })
     }
+
+    this.onFinishOpen?.();
   }
 
   lose() {

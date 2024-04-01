@@ -1,14 +1,12 @@
 "use client"
 
-import Image from "next/image"
 import { Children, Dispatch, FC, MouseEventHandler, ReactNode, SetStateAction, createContext, memo, useContext, useEffect, useReducer, useState } from "react"
+import Image from "next/image"
 import clsx from "clsx";
-import colors from 'tailwindcss/colors';
+import { clamp } from 'lodash/fp';
 
 import { MinesweeperBoard, Tile } from "../minesweeper/engine";
-import { clamp } from "lodash/fp";
 
-// TODO: monospace font
 type TileProps = {
   onClick: MouseEventHandler;
   onContextMenu: MouseEventHandler;
@@ -103,7 +101,6 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
         // don't show anything for 0
         const contents = numSurroundingMines || null;
 
-        // TODO: different colors for different numbers of mines
         return (
           <OpenTile
             onClick={handleClick}
@@ -136,16 +133,13 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
       );
     }
   },
-  ({ tile: prevTile, board: prevBoard }, { tile: nextTile, board: nextBoard }) => {
-    return (
-      prevBoard === nextBoard
-      && prevTile.isOpen === nextTile.isOpen
-      && prevTile.isFlag === nextTile.isFlag
-      // TODO: can I actually skip the mine check? I think this is handled by isOpen
-      // it's not gonna suddenly become a mine while staying open...
-      // && prevTile.isMine === nextTile.isMine
-    );
-  }
+  ({ tile: prevTile, board: prevBoard }, { tile: nextTile, board: nextBoard }) => (
+    // TODO: can I actually skip the mine check? I think this is handled by isOpen
+    // it's not gonna suddenly become a mine while staying open...
+    prevBoard === nextBoard
+    && prevTile.isOpen === nextTile.isOpen
+    && prevTile.isFlag === nextTile.isFlag
+  )
 );
 
 const INIT_WIDTH = 10;
@@ -158,6 +152,7 @@ type MinesweeperContext = {
   setHeight: Dispatch<SetStateAction<number>>,
   mines: number,
   setMines: Dispatch<SetStateAction<number>>,
+  isPlaying: boolean,
   board: MinesweeperBoard,
 };
 const MinesweeperState = createContext<MinesweeperContext>({
@@ -167,18 +162,21 @@ const MinesweeperState = createContext<MinesweeperContext>({
   setHeight: () => undefined,
   mines: INIT_MINES,
   setMines: () => undefined,
+  isPlaying: false,
   board: new MinesweeperBoard(0, 0, 0),
 });
 const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
   const [width, setWidth] = useState(INIT_WIDTH);
   const [height, setHeight] = useState(INIT_HEIGHT);
   const [mines, setMines] = useState(INIT_MINES);
-  const [, forceUpdate] = useReducer(x => x + 1, 0);
+  const [x, forceUpdate] = useReducer(x => x + 1, 0);
   const [board, setBoard] = useState(new MinesweeperBoard(width, height, mines, forceUpdate));
 
   useEffect(() => {
     setBoard(new MinesweeperBoard(width, height, mines, forceUpdate));
   }, [width, height, mines, forceUpdate]);
+
+  const isPlaying = x > 0 && board.status !== 'won';
 
   return (
     <MinesweeperState.Provider value={{
@@ -188,6 +186,7 @@ const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
       setHeight,
       mines,
       setMines,
+      isPlaying,
       board,
     }}>
       {children}
@@ -285,9 +284,30 @@ const Reaction = () => {
   );
 }
 
-const MinesweeperSettings = () => {
+const TimeTaken = () => {
+  const { isPlaying } = useContext(MinesweeperState);
+  const [startTime, setStartTime] = useState(0);
+  const [secondsPassed, setSecondsPassed] = useState(0);
+
+  useEffect(() => {
+    if (isPlaying) {
+      if (!startTime) setStartTime(Date.now());
+
+      let timerRef: NodeJS.Timeout;
+      const continuouslyUpdateSecondsPassed = () => {
+        setSecondsPassed(Math.floor((Date.now() - startTime) / 1000));
+
+        timerRef = setTimeout(continuouslyUpdateSecondsPassed, 1000);
+      }
+
+      continuouslyUpdateSecondsPassed();
+
+      return () => clearTimeout(timerRef);
+    }
+  }, [isPlaying, startTime]);
+
   return (
-    <i>settings</i>
+    <AlarmClockify value={secondsPassed} />
   );
 }
 
@@ -307,7 +327,7 @@ const MinesweeperHeader = () => {
     <div className="flex justify-between">
       <MineCounter />
       <Reaction />
-      <MinesweeperSettings />
+      <TimeTaken />
     </div>
   )
 }
@@ -335,7 +355,6 @@ const MinesweeperGame = () => {
 
 // TODO: add keyboard interactivity to this including arrow key focus navigation
 // TODO: organize now that this file is massive
-// TODO: monospace fonts so that I can easily add the menu
 export default function Minesweeper() {
   return (
     <MinesweeperProvider>

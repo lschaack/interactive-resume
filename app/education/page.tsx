@@ -37,16 +37,6 @@ export default function Education() {
       </h2>
       <ul className="flex flex-wrap gap-x-12 gap-y-6">
         <EducationItem
-          school="University of Washington Seattle"
-          major="General Education"
-          timeline="2014 - 2016 (transferred)"
-          relevantCoursework={[
-            "Web Development",
-            "Linear Algebra",
-            "Intellectual Foundations of Informatics",
-          ]}
-        />
-        <EducationItem
           school="University of Colorado Boulder"
           major="BA in Computer Science"
           timeline="2016 - 2018"
@@ -56,6 +46,16 @@ export default function Education() {
             "Intro to Data Science",
             "Statistical Methods",
             "Computer Graphics",
+          ]}
+        />
+        <EducationItem
+          school="University of Washington Seattle"
+          major="General Education"
+          timeline="2014 - 2016 (transferred)"
+          relevantCoursework={[
+            "Web Development",
+            "Linear Algebra",
+            "Intellectual Foundations of Informatics",
           ]}
         />
       </ul>

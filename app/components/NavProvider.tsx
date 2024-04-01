@@ -22,7 +22,7 @@ const NavContext = createContext<NavContextType>({
 export const useNav = () => useContext(NavContext);
 
 export const NavProvider: FC<{ children?: ReactNode }> = ({ children }) => {
-  const [isMobile, setIsMobile] = useState(getIsMobile());
+  const [isMobile, setIsMobile] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
 
   const toggle = useCallback(() => setIsOpen(prev => !prev), []);

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Noto_Sans } from "next/font/google";
+import { Noto_Sans, Noto_Sans_Mono } from "next/font/google";
 import localFont from 'next/font/local';
 
 import clsx from "clsx";
@@ -13,6 +13,14 @@ const noto_sans = Noto_Sans({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-noto-sans',
+  // TODO: get rid of unused font weights
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+});
+
+const noto_sans_mono = Noto_Sans_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-noto-sans-mono',
   // TODO: get rid of unused font weights
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
 });
@@ -37,10 +45,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${materialSymbols.variable} transition-colors font-semibold`}>
+    <html lang="en" className={clsx(
+      materialSymbols.variable,
+      noto_sans.variable,
+      noto_sans_mono.variable,
+      'transition-colors font-semibold'
+    )}>
       <body className={clsx(
-        noto_sans.className,
-        'bg-background text-foreground',
+        'font-sans bg-background text-foreground',
         'dark:bg-background-dark dark:text-foreground-dark'
       )}>
         <NavProvider>

@@ -136,14 +136,16 @@ export class MinesweeperBoard {
   }
 
   flag(tile: Tile) {
-    tile.isFlag = !tile.isFlag;
-
-    if (tile.isFlag) this.flags.add(tile);
-    else this.flags.delete(tile);
-
-    this.checkWinCondition();
-
-    this.onChange?.();
+    if (!tile.isOpen) {
+      tile.isFlag = !tile.isFlag;
+  
+      if (tile.isFlag) this.flags.add(tile);
+      else this.flags.delete(tile);
+  
+      this.checkWinCondition();
+  
+      this.onChange?.();
+    }
   }
 
   doOpen(tile: Tile) {
@@ -158,7 +160,6 @@ export class MinesweeperBoard {
   // Opens recursively if applicable, doOpen does the actual work
   // FIXME: rules for when a square is open-able are seemingly broken
   open(tile: Tile, visited = new Set<string>()) {
-    debugger;
     if (!tile.isFlag) {
       this.doOpen(tile);
       visited.add(tile.id);

@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { Children, Dispatch, FC, MouseEventHandler, ReactNode, SetStateAction, createContext, memo, useContext, useEffect, useReducer, useState } from "react"
 import clsx from "clsx";
+import colors from 'tailwindcss/colors';
 
 import { MinesweeperBoard, Tile } from "../minesweeper/engine";
 
@@ -23,13 +24,13 @@ const ClosedTile: FC<TileProps & { children?: ReactNode }> = ({ onClick, onConte
         className,
         'font-bold',
         'flex justify-center items-center',
-        'bg-slate-400',
+        'bg-slate-300',
         'border-4 border-solid',
         'border-l-slate-200 border-t-slate-200',
-        'border-r-slate-600 border-b-slate-600',
+        'border-r-slate-500 border-b-slate-500',
         '[&:not(.flag)]:active:border-2',
-        '[&:not(.flag)]:active:border-l-slate-600 [&:not(.flag)]:active:border-t-slate-600',
-        '[&:not(.flag)]:active:border-r-slate-400 [&:not(.flag)]:active:border-b-slate-400',
+        '[&:not(.flag)]:active:border-l-slate-500 [&:not(.flag)]:active:border-t-slate-500',
+        '[&:not(.flag)]:active:border-r-slate-300 [&:not(.flag)]:active:border-b-slate-300',
         // TODO: focus styles
         // 'outline-none focus:shadow-outline',
       )}
@@ -48,8 +49,8 @@ const OpenTile: FC<TileProps & { children?: ReactNode }> = ({ onClick, onContext
         className,
         'font-bold',
         'flex justify-center items-center',
-        'bg-slate-400',
-        'border-l-2 border-t-2 border-solid border-slate-600',
+        'bg-slate-300',
+        'border-l-2 border-t-2 border-solid border-slate-500',
         // TODO: focus styles
         // 'outline-none focus:shadow-outline',
       )}
@@ -57,6 +58,17 @@ const OpenTile: FC<TileProps & { children?: ReactNode }> = ({ onClick, onContext
       {children}
     </button>
   )
+}
+
+const TILE_TEXT_COLOR = {
+  1: 'text-blue-700',
+  2: 'text-green-700',
+  3: 'text-orange-700',
+  4: 'text-purple-700',
+  5: 'text-red-700',
+  6: 'text-indigo-700',
+  7: 'text-gray-800',
+  8: 'text-black',
 }
 
 const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
@@ -95,7 +107,10 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
           <OpenTile
             onClick={handleClick}
             onContextMenu={handleContextMenu}
-            className={!contents && 'pointer-events-none'}
+            className={clsx(
+              !contents && 'pointer-events-none',
+              contents && TILE_TEXT_COLOR[contents as keyof typeof TILE_TEXT_COLOR]
+            )}
           >
             {contents}
           </OpenTile>
@@ -184,12 +199,12 @@ const MINESWEEPER_BORDER: Record<MinesweeperBorderType, string> = {
   outer: clsx(
     'border-4 border-solid',
     'border-l-slate-200 border-t-slate-200',
-    'border-r-slate-600 border-b-slate-600',
+    'border-r-slate-500 border-b-slate-500',
   ),
-  middle: 'border-4 border-solid border-slate-400',
+  middle: 'border-4 border-solid border-slate-300',
   inner: clsx(
     'border-4 border-solid',
-    'border-l-slate-600 border-t-slate-600',
+    'border-l-slate-500 border-t-slate-500',
     'border-r-slate-200 border-b-slate-200',
   )
 }
@@ -199,7 +214,7 @@ const MinesweeperBorder: FC<{ children?: ReactNode; className?: string }> = ({ c
       className,
       MINESWEEPER_BORDER.outer,
       // use gap background to represent the middle/high lane between every outer/inner border
-      'p-2 flex gap-2 bg-slate-400',
+      'p-2 flex gap-2 bg-slate-300',
     )}>
       {Children.map(children, child => (
         <div className={MINESWEEPER_BORDER.inner}>
@@ -228,7 +243,28 @@ const MinesweeperSurface: FC<{ children?: ReactNode }> = ({ children }) => {
   )
 }
 
-const MinesweeperMenu = () => {
+const MineCounter = () => {
+  return (
+    <p>
+      1234567890
+    </p>
+  );
+}
+
+const Reaction = () => {
+  return (
+    <i>sunny</i>
+  );
+}
+
+const MinesweeperSettings = () => {
+  return (
+    <i>settings</i>
+  );
+}
+
+// TODO: monospace number input
+const MinesweeperHeader = () => {
   const {
     width,
     setWidth,
@@ -240,12 +276,11 @@ const MinesweeperMenu = () => {
   } = useContext(MinesweeperState);
 
   return (
-    <form onSubmit={e => e.preventDefault()}>
-      <label>
-        <input className="w-8" />
-        something
-      </label>
-    </form>
+    <div className="flex justify-between">
+      <MineCounter />
+      <Reaction />
+      <MinesweeperSettings />
+    </div>
   )
 }
 
@@ -253,8 +288,8 @@ const MinesweeperGame = () => {
   const { board } = useContext(MinesweeperState);
 
   return (
-    <MinesweeperBorder className="flex flex-col">
-      <MinesweeperMenu />
+    <MinesweeperBorder className="flex flex-col font-mono">
+      <MinesweeperHeader />
       <MinesweeperSurface>
         {board.board.map(row => (
           row.map(tile => (

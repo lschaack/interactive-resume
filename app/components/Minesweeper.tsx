@@ -14,9 +14,13 @@ type TileProps = {
   className?: string | false | undefined;
 };
 const ClosedTile: FC<TileProps & { children?: ReactNode }> = ({ onClick, onContextMenu, className, children }) => {
+  const { setIsMouseDown } = useContext(MinesweeperState);
+
   return (
     <button
       onClick={onClick}
+      onMouseDown={() => setIsMouseDown(true)}
+      onMouseUp={() => setIsMouseDown(false)}
       onContextMenu={onContextMenu}
       tabIndex={0}
       className={clsx(
@@ -39,9 +43,13 @@ const ClosedTile: FC<TileProps & { children?: ReactNode }> = ({ onClick, onConte
   )
 }
 const OpenTile: FC<TileProps & { children?: ReactNode }> = ({ onClick, onContextMenu, className, children }) => {
+  const { setIsMouseDown } = useContext(MinesweeperState);
+
   return (
     <button
       onClick={onClick}
+      onMouseDown={() => setIsMouseDown(true)}
+      onMouseUp={() => setIsMouseDown(false)}
       onContextMenu={onContextMenu}
       tabIndex={-1}
       className={clsx(
@@ -152,6 +160,8 @@ type MinesweeperContext = {
   setHeight: Dispatch<SetStateAction<number>>,
   mines: number,
   setMines: Dispatch<SetStateAction<number>>,
+  isMouseDown: boolean,
+  setIsMouseDown: Dispatch<SetStateAction<boolean>>,
   isPlaying: boolean,
   board: MinesweeperBoard,
 };
@@ -162,6 +172,8 @@ const MinesweeperState = createContext<MinesweeperContext>({
   setHeight: () => undefined,
   mines: INIT_MINES,
   setMines: () => undefined,
+  isMouseDown: false,
+  setIsMouseDown: () => undefined,
   isPlaying: false,
   board: new MinesweeperBoard(0, 0, 0),
 });
@@ -169,6 +181,7 @@ const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
   const [width, setWidth] = useState(INIT_WIDTH);
   const [height, setHeight] = useState(INIT_HEIGHT);
   const [mines, setMines] = useState(INIT_MINES);
+  const [isMouseDown, setIsMouseDown] = useState(false);
   const [x, forceUpdate] = useReducer(x => x + 1, 0);
   const [board, setBoard] = useState(new MinesweeperBoard(width, height, mines, forceUpdate));
 
@@ -186,6 +199,8 @@ const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
       setHeight,
       mines,
       setMines,
+      isMouseDown,
+      setIsMouseDown,
       isPlaying,
       board,
     }}>
@@ -279,9 +294,12 @@ const MineCounter = () => {
 }
 
 const Reaction = () => {
-  return (
-    <i>sunny</i>
-  );
+  const { isMouseDown, board } = useContext(MinesweeperState);
+
+  if (board.status === 'won') return <p>😎</p>;
+  else if (board.status === 'lost') return <p>😵</p>;
+  else if (isMouseDown) return <p>😮</p>;
+  else return <p>😄</p>;
 }
 
 const TimeTaken = () => {

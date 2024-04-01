@@ -6,6 +6,7 @@ import clsx from "clsx";
 import colors from 'tailwindcss/colors';
 
 import { MinesweeperBoard, Tile } from "../minesweeper/engine";
+import { clamp } from "lodash/fp";
 
 // TODO: monospace font
 type TileProps = {
@@ -243,12 +244,39 @@ const MinesweeperSurface: FC<{ children?: ReactNode }> = ({ children }) => {
   )
 }
 
-const MineCounter = () => {
+type AlarmClockifyProps = {
+  value: number;
+  length?: number;
+}
+const AlarmClockify: FC<AlarmClockifyProps> = ({ value, length = 3 }) => {
+  const maxValue = Math.pow(10, length) - 1;
+  const clampedValue = clamp(0, maxValue, value);
+  const content = clampedValue.toString().padStart(length, '0');
+
   return (
-    <p>
-      1234567890
+    <p className="text-center flex text-red-500 font-black">
+      {content.split('').map((character, index) => (
+        <span
+          key={`${character}-${index}`}
+          className={clsx(
+            'inline-block w-3 h-6 px-2',
+            'bg-slate-800',
+            'flex justify-center items-center',
+          )}
+        >
+          {character}
+        </span>
+      ))}
     </p>
-  );
+  )
+}
+
+const MineCounter = () => {
+  const { board } = useContext(MinesweeperState);
+
+  const numericContent = board.nMines - board.flags.size;
+
+  return <AlarmClockify value={numericContent} />;
 }
 
 const Reaction = () => {

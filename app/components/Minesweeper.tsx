@@ -189,7 +189,7 @@ const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
     setBoard(new MinesweeperBoard(width, height, mines, forceUpdate));
   }, [width, height, mines, forceUpdate]);
 
-  const isPlaying = x > 0 && board.status !== 'won';
+  const isPlaying = x > 0 && board.status !== 'won' && board.status !== 'lost';
 
   return (
     <MinesweeperState.Provider value={{
@@ -290,16 +290,28 @@ const MineCounter = () => {
 
   const numericContent = board.nMines - board.flags.size;
 
-  return <AlarmClockify value={numericContent} />;
+  return (
+    <div className={MINESWEEPER_BORDER.inner}>
+      <AlarmClockify value={numericContent} />
+    </div>
+  );
 }
 
 const Reaction = () => {
   const { isMouseDown, board } = useContext(MinesweeperState);
 
-  if (board.status === 'won') return <p>😎</p>;
-  else if (board.status === 'lost') return <p>😵</p>;
-  else if (isMouseDown) return <p>😮</p>;
-  else return <p>😄</p>;
+  const content = (
+    board.status === 'won' ? '😎'
+    : board.status === 'lost' ? '😵'
+    : isMouseDown ? '😮'
+    : '😄'
+  );
+
+  return (
+    <button className={`${MINESWEEPER_BORDER.outer} px-1`}>
+      {content}
+    </button>
+  );
 }
 
 const TimeTaken = () => {
@@ -325,7 +337,9 @@ const TimeTaken = () => {
   }, [isPlaying, startTime]);
 
   return (
-    <AlarmClockify value={secondsPassed} />
+    <div className={MINESWEEPER_BORDER.inner}>
+      <AlarmClockify value={secondsPassed} />
+    </div>
   );
 }
 

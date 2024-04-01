@@ -80,11 +80,15 @@ const TILE_TEXT_COLOR = {
 
 const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
   function MinesweeperTile({ tile, board }) {
+    const { flagMode } = useContext(MinesweeperState);
     const handleClick = () => board.open(tile);
     const handleContextMenu: MouseEventHandler = e => {
       e.preventDefault();
       board.flag(tile);
     }
+
+    const handleLeftClick = flagMode ? handleContextMenu : handleClick;
+    const handleRightClick = flagMode ? handleClick : handleContextMenu;
 
     if (tile.isOpen) {
       if (tile.isMine) {
@@ -93,8 +97,8 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
 
         return (
           <OpenTile
-            onClick={handleClick}
-            onContextMenu={handleContextMenu}
+            onClick={handleLeftClick}
+            onContextMenu={handleRightClick}
             className={clsx(tile.isCulprit && 'bg-red-500')}
           >
             <Image
@@ -112,8 +116,8 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
 
         return (
           <OpenTile
-            onClick={handleClick}
-            onContextMenu={handleContextMenu}
+            onClick={handleLeftClick}
+            onContextMenu={handleRightClick}
             className={clsx(
               !contents && 'pointer-events-none',
               contents && TILE_TEXT_COLOR[contents as keyof typeof TILE_TEXT_COLOR]
@@ -127,8 +131,8 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
       if (board.status === 'lost' && tile.isFlag && !tile.isMine) {
         return (
           <OpenTile
-            onClick={handleClick}
-            onContextMenu={handleContextMenu}
+            onClick={handleLeftClick}
+            onContextMenu={handleRightClick}
           >
             <Image
               src="MineWrong.svg"
@@ -141,8 +145,8 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
       } else {
         return (
           <ClosedTile
-            onClick={handleClick}
-            onContextMenu={handleContextMenu}
+            onClick={handleLeftClick}
+            onContextMenu={handleRightClick}
             className={tile.isFlag && 'flag'}
           >
             {tile.isFlag && (
@@ -180,6 +184,8 @@ type MinesweeperContext = {
   setMines: Dispatch<SetStateAction<number>>,
   isMouseDown: boolean,
   setIsMouseDown: Dispatch<SetStateAction<boolean>>,
+  flagMode: boolean,
+  setFlagMode: Dispatch<SetStateAction<boolean>>,
   isPlaying: boolean,
   board: MinesweeperBoard,
   resetBoard: () => void,
@@ -193,6 +199,8 @@ const MinesweeperState = createContext<MinesweeperContext>({
   setMines: () => undefined,
   isMouseDown: false,
   setIsMouseDown: () => undefined,
+  flagMode: false,
+  setFlagMode: () => undefined,
   isPlaying: false,
   board: new MinesweeperBoard(0, 0, 0),
   resetBoard: () => undefined,
@@ -202,6 +210,7 @@ const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
   const [height, setHeight] = useState(INIT_HEIGHT);
   const [mines, setMines] = useState(INIT_MINES);
   const [isMouseDown, setIsMouseDown] = useState(false);
+  const [flagMode, setFlagMode] = useState(false);
   const [_, forceUpdate] = useReducer(x => x + 1, 0);
   const [board, setBoard] = useState(new MinesweeperBoard(width, height, mines, forceUpdate));
 
@@ -230,6 +239,8 @@ const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
       setMines,
       isMouseDown,
       setIsMouseDown,
+      flagMode,
+      setFlagMode,
       isPlaying,
       board,
       resetBoard,
@@ -379,12 +390,36 @@ const TimeTaken = () => {
   );
 }
 
+const FlagMode = () => {
+  const { flagMode, setFlagMode } = useContext(MinesweeperState);
+
+  return (
+    <button
+      className={clsx(
+        flagMode ? MINESWEEPER_BORDER.inner : MINESWEEPER_BORDER.outer,
+        "flex justify-center align-center"
+      )}
+      onClick={() => setFlagMode(prev => !prev)}
+    >
+      <Image
+        src="Flag.svg"
+        height={24}
+        width={24}
+        alt={`Flag mode ${flagMode ? 'on' : 'off'}`}
+      />
+    </button>
+  );
+}
+
 const MinesweeperHeader = () => {
   return (
     <div className="flex justify-between">
       <MineCounter />
       <Reaction />
-      <TimeTaken />
+      <div className="flex">
+        <TimeTaken />
+        <FlagMode />
+      </div>
     </div>
   )
 }

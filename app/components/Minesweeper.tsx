@@ -424,13 +424,25 @@ const MinesweeperGame = () => {
     <MinesweeperBorder className="flex flex-col font-mono">
       <MinesweeperHeader />
       <div className="flex justify-between">
-        <ClosedTile onClick={setEasy} onContextMenu={() => undefined}>
+        <ClosedTile
+          onClick={setEasy}
+          onContextMenu={() => undefined}
+          className="px-2"
+        >
           easy
         </ClosedTile>
-        <ClosedTile onClick={setMedium} onContextMenu={() => undefined}>
+        <ClosedTile
+          onClick={setMedium}
+          onContextMenu={() => undefined}
+          className="px-2"
+        >
           medium
         </ClosedTile>
-        <ClosedTile onClick={setHard} onContextMenu={() => undefined}>
+        <ClosedTile
+          onClick={setHard}
+          onContextMenu={() => undefined}
+          className="px-2"
+        >
           hard
         </ClosedTile>
       </div>

@@ -50,6 +50,7 @@ export class MinesweeperBoard {
   board: Tile[][];
   height: number;
   width: number;
+  size: number;
   nMines: number;
   status: 'won' | 'lost' | 'playing';
   onChange?: () => void;
@@ -61,6 +62,7 @@ export class MinesweeperBoard {
   constructor(height: number, width: number, nMines: number, onChange?: () => void) {
     this.height = height;
     this.width = width;
+    this.size = this.height * this.width;
     this.nMines = nMines;
     this.status = 'playing';
     this.onChange = onChange;

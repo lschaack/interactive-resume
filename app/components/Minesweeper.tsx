@@ -1,6 +1,6 @@
 "use client"
 
-import { Children, Dispatch, FC, MouseEventHandler, ReactNode, SetStateAction, createContext, memo, useContext, useEffect, useReducer, useState } from "react"
+import { Children, Dispatch, FC, MouseEventHandler, ReactNode, SetStateAction, createContext, memo, useCallback, useContext, useEffect, useReducer, useState } from "react"
 import Image from "next/image"
 import clsx from "clsx";
 import { clamp } from 'lodash/fp';
@@ -31,7 +31,7 @@ const ClosedTile: FC<TileProps & { children?: ReactNode }> = ({ onClick, onConte
         'border-4 border-solid',
         'border-l-slate-200 border-t-slate-200',
         'border-r-slate-500 border-b-slate-500',
-        '[&:not(.flag)]:active:border-2',
+        '[&:not(.flag)]:active:border-2 [&:not(.flag)]:active:p-[2px]',
         '[&:not(.flag)]:active:border-l-slate-500 [&:not(.flag)]:active:border-t-slate-500',
         '[&:not(.flag)]:active:border-r-slate-300 [&:not(.flag)]:active:border-b-slate-300',
         // TODO: focus styles
@@ -164,6 +164,7 @@ type MinesweeperContext = {
   setIsMouseDown: Dispatch<SetStateAction<boolean>>,
   isPlaying: boolean,
   board: MinesweeperBoard,
+  resetBoard: () => void,
 };
 const MinesweeperState = createContext<MinesweeperContext>({
   width: INIT_WIDTH,
@@ -176,20 +177,30 @@ const MinesweeperState = createContext<MinesweeperContext>({
   setIsMouseDown: () => undefined,
   isPlaying: false,
   board: new MinesweeperBoard(0, 0, 0),
+  resetBoard: () => undefined,
 });
 const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
   const [width, setWidth] = useState(INIT_WIDTH);
   const [height, setHeight] = useState(INIT_HEIGHT);
   const [mines, setMines] = useState(INIT_MINES);
   const [isMouseDown, setIsMouseDown] = useState(false);
-  const [x, forceUpdate] = useReducer(x => x + 1, 0);
+  const [_, forceUpdate] = useReducer(x => x + 1, 0);
   const [board, setBoard] = useState(new MinesweeperBoard(width, height, mines, forceUpdate));
 
-  useEffect(() => {
-    setBoard(new MinesweeperBoard(width, height, mines, forceUpdate));
-  }, [width, height, mines, forceUpdate]);
+  const resetBoard = useCallback(
+    () => {
+      setBoard(new MinesweeperBoard(width, height, mines, forceUpdate));
+    },
+    [width, height, mines, forceUpdate]
+  );
 
-  const isPlaying = x > 0 && board.status !== 'won' && board.status !== 'lost';
+  useEffect(resetBoard, [resetBoard]);
+
+  const isPlaying = (
+    board.closed.size !== board.size
+    && board.status !== 'won'
+    && board.status !== 'lost'
+  );
 
   return (
     <MinesweeperState.Provider value={{
@@ -203,6 +214,7 @@ const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
       setIsMouseDown,
       isPlaying,
       board,
+      resetBoard,
     }}>
       {children}
     </MinesweeperState.Provider>
@@ -298,7 +310,7 @@ const MineCounter = () => {
 }
 
 const Reaction = () => {
-  const { isMouseDown, board } = useContext(MinesweeperState);
+  const { isMouseDown, board, resetBoard } = useContext(MinesweeperState);
 
   const content = (
     board.status === 'won' ? '😎'
@@ -308,16 +320,22 @@ const Reaction = () => {
   );
 
   return (
-    <button className={`${MINESWEEPER_BORDER.outer} px-1`}>
+    <ClosedTile className="px-1" onClick={resetBoard} onContextMenu={() => undefined}>
       {content}
-    </button>
+    </ClosedTile>
   );
 }
 
 const TimeTaken = () => {
-  const { isPlaying } = useContext(MinesweeperState);
+  const { isPlaying, board } = useContext(MinesweeperState);
   const [startTime, setStartTime] = useState(0);
   const [secondsPassed, setSecondsPassed] = useState(0);
+
+  // Reset on board change
+  useEffect(() => {
+    setStartTime(0);
+    setSecondsPassed(0);
+  }, [board]);
 
   useEffect(() => {
     if (isPlaying) {
@@ -343,18 +361,7 @@ const TimeTaken = () => {
   );
 }
 
-// TODO: monospace number input
 const MinesweeperHeader = () => {
-  const {
-    width,
-    setWidth,
-    height,
-    setHeight,
-    mines,
-    setMines,
-    board,
-  } = useContext(MinesweeperState);
-
   return (
     <div className="flex justify-between">
       <MineCounter />
@@ -365,11 +372,50 @@ const MinesweeperHeader = () => {
 }
 
 const MinesweeperGame = () => {
-  const { board } = useContext(MinesweeperState);
+  const {
+    board,
+    setWidth,
+    setHeight,
+    setMines,
+    resetBoard,
+  } = useContext(MinesweeperState);
+
+  // TODO: just do some math instead of copy/pasting when I haven't already been coding for days...
+  const setEasy = useCallback(() => {
+    setWidth(10);
+    setHeight(10);
+    setMines(10);
+    resetBoard();
+  }, [setWidth, setHeight, setMines, resetBoard]);
+
+  const setMedium = useCallback(() => {
+    setWidth(20);
+    setHeight(20);
+    setMines(60);
+    resetBoard();
+  }, [setWidth, setHeight, setMines, resetBoard]);
+
+  const setHard = useCallback(() => {
+    setWidth(30);
+    setHeight(30);
+    setMines(200);
+    resetBoard();
+  }, [setWidth, setHeight, setMines, resetBoard]);
 
   return (
     <MinesweeperBorder className="flex flex-col font-mono">
       <MinesweeperHeader />
+      <div className="flex justify-between">
+        <ClosedTile onClick={setEasy} onContextMenu={() => undefined}>
+          easy
+        </ClosedTile>
+        <ClosedTile onClick={setMedium} onContextMenu={() => undefined}>
+          medium
+        </ClosedTile>
+        <ClosedTile onClick={setHard} onContextMenu={() => undefined}>
+          hard
+        </ClosedTile>
+      </div>
       <MinesweeperSurface>
         {board.board.map(row => (
           row.map(tile => (

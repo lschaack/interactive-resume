@@ -116,8 +116,10 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
 
         return (
           <OpenTile
-            onClick={handleLeftClick}
-            onContextMenu={handleRightClick}
+            // intentionally use handleClick directly here -
+            // flag mode should actually still call open if numbered squares are clicked
+            onClick={handleClick}
+            onContextMenu={handleContextMenu}
             className={clsx(
               !contents && 'pointer-events-none',
               contents && TILE_TEXT_COLOR[contents as keyof typeof TILE_TEXT_COLOR]
@@ -217,6 +219,7 @@ const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
   const resetBoard = useCallback(
     () => {
       setBoard(new MinesweeperBoard(width, height, mines, forceUpdate));
+      setFlagMode(false);
     },
     [width, height, mines, forceUpdate]
   );

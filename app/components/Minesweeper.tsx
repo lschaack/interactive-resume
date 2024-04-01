@@ -95,6 +95,7 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
           <OpenTile
             onClick={handleClick}
             onContextMenu={handleContextMenu}
+            className={clsx(tile.isCulprit && 'bg-red-500')}
           >
             <Image
               src={`${icon}.svg`}
@@ -123,28 +124,45 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
         );
       }
     } else {
-      return (
-        <ClosedTile
-          onClick={handleClick}
-          onContextMenu={handleContextMenu}
-          className={tile.isFlag && 'flag'}
-        >
-          {tile.isFlag && (
+      if (board.status === 'lost' && tile.isFlag && !tile.isMine) {
+        return (
+          <OpenTile
+            onClick={handleClick}
+            onContextMenu={handleContextMenu}
+          >
             <Image
-              src="Flag.svg"
+              src="MineWrong.svg"
               height={24}
               width={24}
               alt="flag (closed)"
             />
-          )}
-        </ClosedTile>
-      );
+          </OpenTile>
+        );
+      } else {
+        return (
+          <ClosedTile
+            onClick={handleClick}
+            onContextMenu={handleContextMenu}
+            className={tile.isFlag && 'flag'}
+          >
+            {tile.isFlag && (
+              <Image
+                src="Flag.svg"
+                height={24}
+                width={24}
+                alt="flag (closed)"
+              />
+            )}
+          </ClosedTile>
+        );
+      }
     }
   },
   ({ tile: prevTile, board: prevBoard }, { tile: nextTile, board: nextBoard }) => (
     // TODO: can I actually skip the mine check? I think this is handled by isOpen
     // it's not gonna suddenly become a mine while staying open...
     prevBoard === nextBoard
+    && nextBoard.status === 'playing'
     && prevTile.isOpen === nextTile.isOpen
     && prevTile.isFlag === nextTile.isFlag
   )
@@ -262,7 +280,7 @@ const MinesweeperSurface: FC<{ children?: ReactNode }> = ({ children }) => {
         gridTemplateColumns: `repeat(${width}, 24px)`,
         gridTemplateRows: `repeat(${height}, 24px)`,
         pointerEvents: board.status === 'lost' ? 'none' : 'unset',
-        boxShadow: board.status === 'won' ? '0 0 24px gold' : 'unset',
+        boxShadow: board.status === 'won' ? '0 0 64px gold' : 'unset',
       }}
     >
       {children}

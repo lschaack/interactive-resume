@@ -6,7 +6,7 @@ const Minesweeper = dynamic(() => import('../components/Minesweeper'), { ssr: fa
 
 export default function MinesweeperPage() {
   return (
-    <div>
+    <div className="w-fit">
       <Minesweeper />
     </div>
   );

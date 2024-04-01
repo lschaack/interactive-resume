@@ -20,8 +20,12 @@ export class Tile {
     this.isCulprit = false;
   }
 
-  getCell(): Cell {
+  get cell(): Cell {
     return [this.row, this.col];
+  }
+
+  get key() {
+    return `${this.id};${this.isFlag};${this.isOpen}`;
   }
 }
 
@@ -52,6 +56,7 @@ export class MinesweeperBoard {
 
   mines: Set<Tile>;
   flags: Set<Tile>;
+  closed: Set<Tile>;
 
   constructor(height: number, width: number, nMines: number, onChange?: () => void) {
     this.height = height;
@@ -70,6 +75,8 @@ export class MinesweeperBoard {
         (_, col) => new Tile(row, col)
       )
     );
+
+    this.closed = new Set<Tile>(this.board.flatMap(row => row));
 
     this.setMines();
   }
@@ -95,7 +102,7 @@ export class MinesweeperBoard {
   }
 
   getNeighbor(tile: Tile, direction: Direction) {
-    const neighborCell = addCells(tile.getCell(), MOVES[direction]);
+    const neighborCell = addCells(tile.cell, MOVES[direction]);
 
     if (this.isValidCell(neighborCell)) {
       const [row, col] = neighborCell;
@@ -134,12 +141,15 @@ export class MinesweeperBoard {
     if (tile.isFlag) this.flags.add(tile);
     else this.flags.delete(tile);
 
+    this.checkWinCondition();
+
     this.onChange?.();
   }
 
   doOpen(tile: Tile) {
     if (!tile.isFlag) {
       tile.isOpen = true;
+      this.closed.delete(tile);
 
       if (tile.isMine) this.lose();
     }
@@ -148,6 +158,7 @@ export class MinesweeperBoard {
   // Opens recursively if applicable, doOpen does the actual work
   // FIXME: rules for when a square is open-able are seemingly broken
   open(tile: Tile, visited = new Set<string>()) {
+    debugger;
     if (!tile.isFlag) {
       this.doOpen(tile);
       visited.add(tile.id);
@@ -168,12 +179,19 @@ export class MinesweeperBoard {
 
       if (this.status === 'lost') {
         tile.isCulprit = true;
-      } else if ([...this.mines].every(mine => this.flags.has(mine))) {
-        this.win();
+      } else {
+        this.checkWinCondition();
       }
 
       this.onChange?.();
     }
+  }
+
+  checkWinCondition() {
+    const isEveryMineFlagged = [...this.mines].every(mine => this.flags.has(mine));
+    const isEveryClosedTileAFlag = [...this.closed].every(mine => this.flags.has(mine));
+
+    if (isEveryMineFlagged && isEveryClosedTileAFlag) this.win();
   }
 
   // TODO: this will re-render twice since it gets called from doOpen...

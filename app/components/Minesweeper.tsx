@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { FC, MouseEventHandler, ReactNode, memo, useReducer, useState } from "react"
+import { Children, Dispatch, FC, MouseEventHandler, ReactNode, SetStateAction, createContext, memo, useContext, useEffect, useReducer, useState } from "react"
 import clsx from "clsx";
 
 import { MinesweeperBoard, Tile } from "../minesweeper/engine";
@@ -121,44 +121,162 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
     }
   },
   ({ tile: prevTile, board: prevBoard }, { tile: nextTile, board: nextBoard }) => {
-    // TODO: this can probably be sped up
     return (
       prevBoard === nextBoard
       && prevTile.isOpen === nextTile.isOpen
       && prevTile.isFlag === nextTile.isFlag
-      && prevTile.isMine === nextTile.isMine
+      // TODO: can I actually skip the mine check? I think this is handled by isOpen
+      // it's not gonna suddenly become a mine while staying open...
+      // && prevTile.isMine === nextTile.isMine
     );
   }
 );
 
-// TODO: add keyboard interactivity to this including arrow key focus navigation
-export default function Minesweeper() {
-  const [width, setWidth] = useState(30);
-  const [height, setHeight] = useState(30);
-  const [mines, setMines] = useState(180);
+const INIT_WIDTH = 10;
+const INIT_HEIGHT = 10;
+const INIT_MINES = 10;
+type MinesweeperContext = {
+  width: number,
+  setWidth: Dispatch<SetStateAction<number>>,
+  height: number,
+  setHeight: Dispatch<SetStateAction<number>>,
+  mines: number,
+  setMines: Dispatch<SetStateAction<number>>,
+  board: MinesweeperBoard,
+};
+const MinesweeperState = createContext<MinesweeperContext>({
+  width: INIT_WIDTH,
+  setWidth: () => undefined,
+  height: INIT_HEIGHT,
+  setHeight: () => undefined,
+  mines: INIT_MINES,
+  setMines: () => undefined,
+  board: new MinesweeperBoard(0, 0, 0),
+});
+const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
+  const [width, setWidth] = useState(INIT_WIDTH);
+  const [height, setHeight] = useState(INIT_HEIGHT);
+  const [mines, setMines] = useState(INIT_MINES);
   const [, forceUpdate] = useReducer(x => x + 1, 0);
   const [board, setBoard] = useState(new MinesweeperBoard(width, height, mines, forceUpdate));
 
-  return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: `repeat(${width}, 24px)`,
-      gridTemplateRows: `repeat(${height}, 24px)`,
-      pointerEvents: board.status === 'lost' ? 'none' : 'unset',
-    }}>
-      {board.board.map(row => (
-        row.map(tile => {
-          const key = `${tile.id} ${tile.isFlag} ${tile.isOpen}`;
+  useEffect(() => {
+    setBoard(new MinesweeperBoard(width, height, mines, forceUpdate));
+  }, [width, height, mines, forceUpdate]);
 
-          return (
+  return (
+    <MinesweeperState.Provider value={{
+      width,
+      setWidth,
+      height,
+      setHeight,
+      mines,
+      setMines,
+      board,
+    }}>
+      {children}
+    </MinesweeperState.Provider>
+  )
+}
+
+type MinesweeperBorderType = 'outer' | 'middle' | 'inner';
+const MINESWEEPER_BORDER: Record<MinesweeperBorderType, string> = {
+  outer: clsx(
+    'border-4 border-solid',
+    'border-l-slate-200 border-t-slate-200',
+    'border-r-slate-600 border-b-slate-600',
+  ),
+  middle: 'border-4 border-solid border-slate-400',
+  inner: clsx(
+    'border-4 border-solid',
+    'border-l-slate-600 border-t-slate-600',
+    'border-r-slate-200 border-b-slate-200',
+  )
+}
+const MinesweeperBorder: FC<{ children?: ReactNode; className?: string }> = ({ children, className }) => {
+  return (
+    <div className={clsx(
+      className,
+      MINESWEEPER_BORDER.outer,
+      // use gap background to represent the middle/high lane between every outer/inner border
+      'p-2 flex gap-2 bg-slate-400',
+    )}>
+      {Children.map(children, child => (
+        <div className={MINESWEEPER_BORDER.inner}>
+          {child}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const MinesweeperSurface: FC<{ children?: ReactNode }> = ({ children }) => {
+  const { height, width, board } = useContext(MinesweeperState);
+
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${width}, 24px)`,
+        gridTemplateRows: `repeat(${height}, 24px)`,
+        pointerEvents: board.status === 'lost' ? 'none' : 'unset',
+        boxShadow: board.status === 'won' ? '0 0 24px gold' : 'unset',
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+const MinesweeperMenu = () => {
+  const {
+    width,
+    setWidth,
+    height,
+    setHeight,
+    mines,
+    setMines,
+    board,
+  } = useContext(MinesweeperState);
+
+  return (
+    <form onSubmit={e => e.preventDefault()}>
+      <label>
+        <input className="w-8" />
+        something
+      </label>
+    </form>
+  )
+}
+
+const MinesweeperGame = () => {
+  const { board } = useContext(MinesweeperState);
+
+  return (
+    <MinesweeperBorder className="flex flex-col">
+      <MinesweeperMenu />
+      <MinesweeperSurface>
+        {board.board.map(row => (
+          row.map(tile => (
             <MinesweeperTile
-              key={key}
+              key={tile.key}
               tile={tile}
               board={board}
             />
-          );
-        })
-      ))}
-    </div>
+          ))
+        ))}
+      </MinesweeperSurface>
+    </MinesweeperBorder>
+  );
+}
+
+// TODO: add keyboard interactivity to this including arrow key focus navigation
+// TODO: organize now that this file is massive
+// TODO: monospace fonts so that I can easily add the menu
+export default function Minesweeper() {
+  return (
+    <MinesweeperProvider>
+      <MinesweeperGame />
+    </MinesweeperProvider>
   );
 }

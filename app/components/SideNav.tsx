@@ -1,12 +1,12 @@
 "use client";
 
-import { FC, KeyboardEventHandler, useEffect } from "react";
+import { FC, useEffect } from "react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import clsx from "clsx";
-import { MAX_MOBILE_SCREEN_WIDTH, useNav } from "./NavProvider";
+import { useNav } from "./NavProvider";
 import { IconButton } from "./IconButton";
 import FocusTrap from "focus-trap-react";
 

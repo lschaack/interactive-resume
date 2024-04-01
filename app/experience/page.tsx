@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { FC, ReactNode } from "react";
 
 type ExperienceItemProps = {
@@ -28,26 +27,30 @@ export default function Experience() {
       </h2>
       <ol className="flex flex-wrap gap-x-24 gap-y-6">
         <ExperienceItem title="Software Engineer - Clover" timeline="November 2018 - Present">
-          <p>
-            Took responsibility for the maintenance and development of the help center, reworking the search indexing process, content model, and validation to accomodate the challenges of context-sensitive help
-          </p>
-          <p>
-            Helped migrate a legacy application to leverage newer React infrastructure
-          </p>
-          <p>
-            Worked with a challenging API using in-progress documentation to create a merchant support chat application, reducing call volume and improving the quality of future support calls
-          </p>
+          <ul className="marker:text-slate-600 list-disc pl-6 flex flex-col gap-y-2">
+            <li>
+              Took responsibility for the maintenance and development of the help center, reworking the search indexing process, content model, and validation to accomodate the challenges of context-sensitive help
+            </li>
+            <li>
+              Reworked a system based on traditional rollout to enable user-driven opt in/out of a new dashboard, refactoring code across a dozen repositories to stably transition to the new flow across version mismatch and rollout stage.
+            </li>
+            <li>
+              Worked on the Web Infrastructure team to maintain a system of runtime-included apps deployed from separate repositories using module federation.
+            </li>
+          </ul>
         </ExperienceItem>
         <ExperienceItem title="Internship - Focus Point Capital" timeline="March - August 2018">
-          <p>
-            Developed a financial model for investment based on market data using the NumPy and Pandas libraries in a Jupyter Notebook
-          </p>
-          <p>
-            Tailored model’s function based on supervisor feedback, adding and editing features as requested
-          </p>
-          <p>
-            Produced detailed documentation for the use and expansion of the above model
-          </p>
+          <ul className="marker:text-slate-600 list-disc pl-6 flex flex-col gap-y-2">
+            <li>
+              Developed a financial model for investment based on market data using the NumPy and Pandas libraries in a Jupyter Notebook
+            </li>
+            <li>
+              Tailored model’s function based on supervisor feedback, adding and editing features as requested
+            </li>
+            <li>
+              Produced detailed documentation for the use and expansion of the above model
+            </li>
+          </ul>
         </ExperienceItem>
       </ol>
     </div>

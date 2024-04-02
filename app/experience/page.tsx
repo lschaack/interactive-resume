@@ -29,13 +29,13 @@ export default function Experience() {
         <ExperienceItem title="Software Engineer - Clover" timeline="November 2018 - Present">
           <ul className="marker:text-slate-600 list-disc pl-6 flex flex-col gap-y-2">
             <li>
-              Took responsibility for the maintenance and development of the help center, reworking the search indexing process, content model, and validation to accomodate the challenges of context-sensitive help
+              Worked on the Web Infrastructure team to maintain a system of runtime-included apps deployed from separate repositories using module federation.
             </li>
             <li>
               Reworked a system based on traditional rollout to enable user-driven opt in/out of a new dashboard, refactoring code across a dozen repositories to stably transition to the new flow across version mismatch and rollout stage.
             </li>
             <li>
-              Worked on the Web Infrastructure team to maintain a system of runtime-included apps deployed from separate repositories using module federation.
+              Took responsibility for the maintenance and development of the help center, reworking the search indexing process, content model, and validation to accomodate the challenges of context-sensitive help
             </li>
           </ul>
         </ExperienceItem>

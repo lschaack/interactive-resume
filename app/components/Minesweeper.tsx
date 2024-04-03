@@ -459,7 +459,7 @@ const MinesweeperGame = () => {
   }, [setWidth, setHeight, setMines, resetBoard]);
 
   return (
-    <MinesweeperBorder className="flex flex-col font-mono">
+    <MinesweeperBorder className="flex flex-col font-mono w-fit text-black">
       <MinesweeperHeader />
       <div className="flex justify-between">
         <ClosedTile

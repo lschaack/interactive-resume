@@ -1,7 +1,7 @@
 export default function Home() {
   return (
     <>
-      <h2 className="text-xl">
+      <h2 className="text-xl font-bold">
         About
       </h2>
       <div className="flex flex-col gap-y-3 font-normal">

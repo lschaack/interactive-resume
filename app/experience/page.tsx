@@ -21,18 +21,18 @@ const ExperienceItem: FC<ExperienceItemProps> = ({ title, timeline, children }) 
 
 export default function Experience() {
   return (
-    <div className="flex flex-col gap-y-3">
-      <h2 className="text-xl">
+    <>
+      <h2 className="text-xl font-bold">
         Experience
       </h2>
       <ol className="flex flex-wrap gap-x-24 gap-y-6">
         <ExperienceItem title="Software Engineer - Clover" timeline="November 2018 - Present">
           <ul className="marker:text-slate-600 list-disc pl-6 flex flex-col gap-y-2">
             <li>
-              Worked on the Web Infrastructure team to maintain a system of runtime-included apps deployed from separate repositories using module federation.
+              Worked on the Web Infrastructure team to maintain a system of runtime-included apps deployed from separate repositories using module federation
             </li>
             <li>
-              Reworked a system based on traditional rollout to enable user-driven opt in/out of a new dashboard, refactoring code across a dozen repositories to stably transition to the new flow across version mismatch and rollout stage.
+              Reworked a system based on traditional rollout to enable user-driven opt in/out of a new dashboard, refactoring code across a dozen repositories to stably transition to the new flow across version mismatch and rollout stage
             </li>
             <li>
               Took responsibility for the maintenance and development of the help center, reworking the search indexing process, content model, and validation to accomodate the challenges of context-sensitive help
@@ -53,6 +53,6 @@ export default function Experience() {
           </ul>
         </ExperienceItem>
       </ol>
-    </div>
+    </>
   );
 }

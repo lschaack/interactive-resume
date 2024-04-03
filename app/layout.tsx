@@ -63,7 +63,7 @@ export default function RootLayout({
           )}>
             <Header />
             <SideNav />
-            <main className="p-6 flex flex-col gap-y-3">
+            <main className="p-6 flex flex-col gap-y-3 items-center sm:items-start">
               {children}
             </main>
           </div>

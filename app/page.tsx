@@ -35,26 +35,6 @@ const FALLOFF = 1;
 
 const CardSize = createContext(0);
 
-type CardCarouselContextType = {
-  normMousePosition: number;
-  basis: number;
-  gap: number;
-  totalCards: number;
-  totalLength: number;
-  sliceLength: number;
-  positions: number[];
-  isMouseOver: boolean;
-};
-const CardCarouselContext = createContext<CardCarouselContextType>({
-  normMousePosition: 0,
-  basis: 0,
-  gap: 0,
-  totalCards: 0,
-  totalLength: 0,
-  sliceLength: 0,
-  positions: [],
-  isMouseOver: false,
-});
 // TODO:
 // - wait for a couple hundred ms
 // - then expand to max height needed to reduce reflow
@@ -73,15 +53,14 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
 
   const {
     totalCards,
-    totalLength,
+    unscaledLength,
     sliceLength,
     positions,
-    maxScaledLength,
   } = useMemo(() => {
     const totalCards = Children.count(children);
-    const totalLength = totalCards * (basis + gap) - gap;
+    const unscaledLength = totalCards * (basis + gap) - gap;
     // percentage of total length taken up by cards
-    const normTotalCardLength = totalCards * basis / totalLength;
+    const normTotalCardLength = totalCards * basis / unscaledLength;
     // percentage of total length taken up by gaps
     const normTotalGapLength = 1 - normTotalCardLength;
     // normed length of a single card
@@ -96,14 +75,11 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
       positions.push(halfNormCardLength + i * sliceLength);
     }
 
-    const maxScaledLength = totalLength - basis + SCALE * basis;
-
     return {
       totalCards,
-      totalLength,
+      unscaledLength,
       sliceLength,
       positions,
-      maxScaledLength,
     }
   }, [basis, gap, children]);
 
@@ -111,24 +87,17 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
     if (containerElement.current) {
       if (isVertical) {
         const relativeY = event.pageY - containerElement.current.offsetTop;
-        const normY = relativeY / totalLength;
-
-        console.log('event.pageY', event.pageY);
-        console.log('containerElement.current.offsetTop', containerElement.current.offsetTop);
+        const normY = relativeY / unscaledLength;
 
         setNormMousePosition(normY);
       } else {
         const relativeX = event.pageX - containerElement.current.offsetLeft;
-        const normX = relativeX / totalLength;
+        const normX = relativeX / unscaledLength;
 
         setNormMousePosition(normX);
       }
     }
-  }, [isVertical, totalLength]);
-
-  // console.log('window.scrollY', window.scrollY);
-  // console.log('window.innerHeight', window.innerHeight);
-  // console.log('document.body.scrollHeight', document.body.scrollHeight);
+  }, [isVertical, unscaledLength]);
 
   const sizes = positions.map(normCardPosition => {
     const distance = Math.abs(normMousePosition - normCardPosition);
@@ -142,7 +111,8 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
     return isMouseOver ? scale * basis : basis;
   });
 
-  const length = sizes.reduce((a, b) => a + b, 0) + gap * (totalCards - 1);
+  const scaledLength = sizes.reduce((a, b) => a + b, 0) + gap * (totalCards - 1);
+  const shift = normMousePosition * (scaledLength - unscaledLength);
 
   return (
     <ul
@@ -150,30 +120,23 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsMouseOver(true)}
       onMouseLeave={() => setIsMouseOver(false)}
-      style={{
-        display: 'flex',
-        flexDirection: isVertical ? 'column' : 'row',
-        gap,
-        [isVertical ? 'height' : 'width']: isMouseOver ? length : totalLength,
-        // alignItems: 'center',
-      }}
+      className="relative overflow-hidden"
+      style={{ [isVertical ? 'height' : 'width']: unscaledLength }}
     >
-      <CardCarouselContext.Provider value={{
-        normMousePosition,
-        basis,
-        gap,
-        totalCards,
-        totalLength,
-        sliceLength,
-        positions,
-        isMouseOver,
-      }}>
+      <div
+        className="absolute flex"
+        style={{
+          top: -shift,
+          flexDirection: isVertical ? 'column' : 'row',
+          gap,
+        }}
+      >
         {Children.map(children, (child, index) => (
           <CardSize.Provider value={sizes[index]}>
             {child}
           </CardSize.Provider>
         ))}
-      </CardCarouselContext.Provider>
+      </div>
     </ul>
   )
 }

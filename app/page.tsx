@@ -33,7 +33,7 @@ const SCALE_FACTOR = SCALE - MIN_SCALE;
 // falloff is how many slice lengths it takes for a card to reach MIN_SCALE
 const FALLOFF = 1;
 
-const CarouselPosition = createContext(0);
+const CardSize = createContext(0);
 
 type CardCarouselContextType = {
   normMousePosition: number;
@@ -71,7 +71,6 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
   const isVertical = direction === Direction.VERTICAL;
   const [isMouseOver, setIsMouseOver] = useState(false);
 
-  // TODO: potentially adjust to account for non-square children
   const {
     totalCards,
     totalLength,
@@ -97,11 +96,6 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
       positions.push(halfNormCardLength + i * sliceLength);
     }
 
-    // TODO: to set the max height/width of the parent when mouse is over, I need to know
-    // the maximum of scaled card sizes - a good heuristic is FALLOFF * sliceLength for
-    // any given relatively linear easing function, but I don't think it's totally accurate
-    // and probably inaccurate enough to overlap w/text, need a better way of doing this
-    // dynamically....
     const maxScaledLength = totalLength - basis + SCALE * basis;
 
     return {
@@ -119,6 +113,9 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
         const relativeY = event.pageY - containerElement.current.offsetTop;
         const normY = relativeY / totalLength;
 
+        console.log('event.pageY', event.pageY);
+        console.log('containerElement.current.offsetTop', containerElement.current.offsetTop);
+
         setNormMousePosition(normY);
       } else {
         const relativeX = event.pageX - containerElement.current.offsetLeft;
@@ -128,6 +125,24 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
       }
     }
   }, [isVertical, totalLength]);
+
+  // console.log('window.scrollY', window.scrollY);
+  // console.log('window.innerHeight', window.innerHeight);
+  // console.log('document.body.scrollHeight', document.body.scrollHeight);
+
+  const sizes = positions.map(normCardPosition => {
+    const distance = Math.abs(normMousePosition - normCardPosition);
+    // linear falloff over the length of FALLOFF slices
+    // scaleAdjust is a value from:
+    // - 0 when mouse position is at card position
+    // - to 1 when mouse position is at or beyond FALLOFF * sliceLength
+    const scaleAdjust = Math.min(distance, FALLOFF * sliceLength) / (FALLOFF * sliceLength);
+    const scale = SCALE - SCALE_FACTOR * scaleAdjust;
+
+    return isMouseOver ? scale * basis : basis;
+  });
+
+  const length = sizes.reduce((a, b) => a + b, 0) + gap * (totalCards - 1);
 
   return (
     <ul
@@ -139,7 +154,7 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
         display: 'flex',
         flexDirection: isVertical ? 'column' : 'row',
         gap,
-        [isVertical ? 'height' : 'width']: isMouseOver ? maxScaledLength : totalLength,
+        [isVertical ? 'height' : 'width']: isMouseOver ? length : totalLength,
         // alignItems: 'center',
       }}
     >
@@ -154,9 +169,9 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
         isMouseOver,
       }}>
         {Children.map(children, (child, index) => (
-          <CarouselPosition.Provider value={positions[index]}>
+          <CardSize.Provider value={sizes[index]}>
             {child}
-          </CarouselPosition.Provider>
+          </CardSize.Provider>
         ))}
       </CardCarouselContext.Provider>
     </ul>
@@ -164,23 +179,15 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
 }
 
 const Card: FC<PropsWithChildren> = ({ children }) => {
-  const normCardPosition = useContext(CarouselPosition);
-  const { normMousePosition, basis, sliceLength, isMouseOver } = useContext(CardCarouselContext);
-
-  const distance = Math.abs(normMousePosition - normCardPosition);
-  // linear falloff over the length of FALLOFF slices
-  // scaleAdjust is a value from:
-  // - 0 when mouse position is at card position
-  // - to 1 when mouse position is at or beyond FALLOFF * sliceLength
-  const scaleAdjust = Math.min(distance, FALLOFF * sliceLength) / (FALLOFF * sliceLength);
-  const scale = SCALE - SCALE_FACTOR * scaleAdjust;
-  const size = isMouseOver ? scale * basis : basis;
+  const size = useContext(CardSize);
 
   return (
-    <li style={{
-      height: size,
-      width: size,
-    }}>
+    <li
+      style={{
+        height: size,
+        width: size,
+      }}
+    >
       {children}
     </li>
   )

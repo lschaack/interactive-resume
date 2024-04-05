@@ -420,8 +420,8 @@ const MinesweeperHeader = () => {
       <MineCounter />
       <Reaction />
       <div className="flex">
-        <TimeTaken />
         <FlagMode />
+        <TimeTaken />
       </div>
     </div>
   )

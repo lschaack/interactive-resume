@@ -11,6 +11,7 @@ import {
   ReactNode,
   RefObject,
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -23,19 +24,36 @@ enum Direction {
   HORIZONTAL,
 }
 
-const CarouselIndex = createContext(-1);
+// scale is how large the card will be with the cursor at the normed center
+const SCALE = 3;
+// min scale is how small the card can possibly be as a factor of `basis`
+const MIN_SCALE = 1;
+// SCALE_FACTOR is how much SCALE needs to decrease to get to MIN_SCALE at max distance
+const SCALE_FACTOR = SCALE - MIN_SCALE;
+// falloff is how many slice lengths it takes for a card to reach MIN_SCALE
+const FALLOFF = 1;
+
+const CarouselPosition = createContext(0);
 
 type CardCarouselContextType = {
   normMousePosition: number;
-  totalCards: number;
   basis: number;
   gap: number;
+  totalCards: number;
+  totalLength: number;
+  sliceLength: number;
+  positions: number[];
+  isMouseOver: boolean;
 };
 const CardCarouselContext = createContext<CardCarouselContextType>({
   normMousePosition: 0,
-  totalCards: 0,
   basis: 0,
   gap: 0,
+  totalCards: 0,
+  totalLength: 0,
+  sliceLength: 0,
+  positions: [],
+  isMouseOver: false,
 });
 // TODO:
 // - wait for a couple hundred ms
@@ -50,27 +68,53 @@ type CardCarouselProps = {
 const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.VERTICAL, basis, gap }) => {
   const containerElement = useRef<HTMLUListElement>(null);
   const [normMousePosition, setNormMousePosition] = useState(0);
-  const [containerInfo, setContainerInfo] = useState<DOMRect>();
-  const [containerWidth, setContainerWidth] = useState(0);
   const isVertical = direction === Direction.VERTICAL;
+  const [isMouseOver, setIsMouseOver] = useState(false);
 
   // TODO: potentially adjust to account for non-square children
-  const totalLength = useMemo(() => {
-    const nChildren = Children.count(children);
+  const {
+    totalCards,
+    totalLength,
+    sliceLength,
+    positions,
+    maxScaledLength,
+  } = useMemo(() => {
+    const totalCards = Children.count(children);
+    const totalLength = totalCards * (basis + gap) - gap;
+    // percentage of total length taken up by cards
+    const normTotalCardLength = totalCards * basis / totalLength;
+    // percentage of total length taken up by gaps
+    const normTotalGapLength = 1 - normTotalCardLength;
+    // normed length of a single card
+    const normCardLength = normTotalCardLength / totalCards;
+    // normed length of a single gap
+    const normGapLength = normTotalGapLength / totalCards;
+    const sliceLength = normCardLength + normGapLength;
 
-    return nChildren * (basis + gap) - gap;
+    const halfNormCardLength = normCardLength / 2;
+    const positions: number[] = [];
+    for (let i = 0; i < totalCards; i++) {
+      positions.push(halfNormCardLength + i * sliceLength);
+    }
+
+    // TODO: to set the max height/width of the parent when mouse is over, I need to know
+    // the maximum of scaled card sizes - a good heuristic is FALLOFF * sliceLength for
+    // any given relatively linear easing function, but I don't think it's totally accurate
+    // and probably inaccurate enough to overlap w/text, need a better way of doing this
+    // dynamically....
+    const maxScaledLength = totalLength - basis + SCALE * basis;
+
+    return {
+      totalCards,
+      totalLength,
+      sliceLength,
+      positions,
+      maxScaledLength,
+    }
   }, [basis, gap, children]);
 
-  useEffect(() => {
+  const handleMouseMove: MouseEventHandler = useCallback(event => {
     if (containerElement.current) {
-      setContainerInfo(containerElement.current.getBoundingClientRect());
-    }
-  }, [containerElement]);
-
-  // TODO: Math.max(normPos, 1)?
-  const handleMouseMove: MouseEventHandler = event => {
-    // TODO: get rid of one of these if I only use one
-    if (containerInfo && containerElement.current) {
       if (isVertical) {
         const relativeY = event.pageY - containerElement.current.offsetTop;
         const normY = relativeY / totalLength;
@@ -83,29 +127,36 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
         setNormMousePosition(normX);
       }
     }
-  }
+  }, [isVertical, totalLength]);
 
   return (
     <ul
       ref={containerElement}
       onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsMouseOver(true)}
+      onMouseLeave={() => setIsMouseOver(false)}
       style={{
         display: 'flex',
         flexDirection: isVertical ? 'column' : 'row',
         gap,
-        [isVertical ? 'height' : 'width']: totalLength,
+        [isVertical ? 'height' : 'width']: isMouseOver ? maxScaledLength : totalLength,
+        // alignItems: 'center',
       }}
     >
       <CardCarouselContext.Provider value={{
         normMousePosition,
-        totalCards: Children.count(children),
         basis,
         gap,
+        totalCards,
+        totalLength,
+        sliceLength,
+        positions,
+        isMouseOver,
       }}>
         {Children.map(children, (child, index) => (
-          <CarouselIndex.Provider value={index}>
+          <CarouselPosition.Provider value={positions[index]}>
             {child}
-          </CarouselIndex.Provider>
+          </CarouselPosition.Provider>
         ))}
       </CardCarouselContext.Provider>
     </ul>
@@ -113,26 +164,24 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
 }
 
 const Card: FC<PropsWithChildren> = ({ children }) => {
-  const index = useContext(CarouselIndex);
-  const { normMousePosition, totalCards, basis } = useContext(CardCarouselContext);
+  const normCardPosition = useContext(CarouselPosition);
+  const { normMousePosition, basis, sliceLength, isMouseOver } = useContext(CardCarouselContext);
 
-  // TODO: cement unchanging values (maybe in context?)
-  const normSlice = 1 / totalCards;
-  const halfNormSlice = normSlice / 2;
-
-  // represents the value of `normMousePosition` when the cursor is at the center of this card
-  const normCenter = index * normSlice + halfNormSlice;
-
-  const distance = Math.abs(normMousePosition - normCenter);
-  // linear falloff over the length of one slice
-  const scale = 2 - Math.min(distance, normSlice) / normSlice;
-  const size = scale * basis;
+  const distance = Math.abs(normMousePosition - normCardPosition);
+  // linear falloff over the length of FALLOFF slices
+  // scaleAdjust is a value from:
+  // - 0 when mouse position is at card position
+  // - to 1 when mouse position is at or beyond FALLOFF * sliceLength
+  const scaleAdjust = Math.min(distance, FALLOFF * sliceLength) / (FALLOFF * sliceLength);
+  const scale = SCALE - SCALE_FACTOR * scaleAdjust;
+  const size = isMouseOver ? scale * basis : basis;
 
   return (
-    <li style={{ height: size, width: size }}>
-      {
-        children
-      }
+    <li style={{
+      height: size,
+      width: size,
+    }}>
+      {children}
     </li>
   )
 }
@@ -165,7 +214,11 @@ export default function About() {
             Serial personal project-starter, scope expander, and pre-polish abandoner
           </li>
         </ul> */}
-        <CardCarousel basis={160} gap={12} direction={Direction.HORIZONTAL}>
+        <CardCarousel
+          basis={160}
+          gap={12}
+          // direction={Direction.HORIZONTAL}
+        >
           <Card>
             <Image
               src="/software engineer.jpeg"

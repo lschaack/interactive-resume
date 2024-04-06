@@ -216,7 +216,7 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
         setMouseOverTime(Date.now());
         setIsMouseOver(false);
       }}
-      className="relative overflow-hidden"
+      className="relative overflow-clip"
       style={{ [isVertical ? 'height' : 'width']: unscaledLength }}
     >
       <div
@@ -226,6 +226,7 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
           [isVertical ? 'top' : 'left']: -shift,
           [isVertical ? 'width' : 'height']: crossAxisLength,
           flexDirection: isVertical ? 'column' : 'row',
+          alignItems: isVertical ? 'unset' : 'center',
           gap,
           padding: gap,
         }}
@@ -249,7 +250,7 @@ const Card: FC<PropsWithChildren> = ({ children }) => {
   return (
     <li
       tabIndex={0}
-      className="outline-none focus:shadow-outline"
+      className="outline-none focus:shadow-outline flex-shrink-0"
       onFocus={focus}
       onBlur={blur}
       style={{
@@ -314,7 +315,7 @@ export default function About() {
         <CardCarousel
           basis={160}
           gap={4}
-          // direction={Direction.HORIZONTAL}
+          direction={Direction.HORIZONTAL}
         >
           <Card>
             <InternallyCaptionedImage

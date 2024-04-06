@@ -1,5 +1,6 @@
 "use client"
 
+import { easeOutCubic } from "@/utils/easingFunctions";
 import Image from "next/image";
 // TODO ^: make this mostly server-rendered
 
@@ -14,6 +15,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState
@@ -24,6 +26,11 @@ enum Direction {
   HORIZONTAL,
 }
 
+enum EasingDirection {
+  UP,
+  DOWN,
+}
+
 // scale is how large the card will be with the cursor at the normed center
 const SCALE = 3;
 // min scale is how small the card can possibly be as a factor of `basis`
@@ -32,13 +39,49 @@ const MIN_SCALE = 1;
 const SCALE_FACTOR = SCALE - MIN_SCALE;
 // falloff is how many slice lengths it takes for a card to reach MIN_SCALE
 const FALLOFF = 1;
+// how many MS to increase to full scaling on carousel mouse over
+const EASING_MS = 200;
 
 const CardSize = createContext(0);
 
-// TODO:
-// - wait for a couple hundred ms
-// - then expand to max height needed to reduce reflow
-// - then smooth zooming by another couple hundred ms
+const useEasingFactor = (startTime: number | undefined, duration: number, direction = EasingDirection.UP) => {
+  const [easingFactor, setEasingFactor] = useState(0);
+  const frameId = useRef<number>();
+
+  useEffect(() => {
+    if (startTime) {
+      const stopAnimation = () => {
+        if (frameId.current) {
+          cancelAnimationFrame(frameId.current);
+          frameId.current = undefined;
+        }
+      }
+
+      if (direction === EasingDirection.UP) setEasingFactor(0);
+      else setEasingFactor(1);
+
+      const updateEasingFactor = () => {
+        const msPassed = Date.now() - startTime;
+        const normTimePassed = Math.min(msPassed / duration, 1);
+        const easingFactor = direction === EasingDirection.UP
+          ? easeOutCubic(normTimePassed)
+          : 1 - easeOutCubic(normTimePassed);
+
+        setEasingFactor(easingFactor);
+
+        if (easingFactor === 1) stopAnimation();
+        else frameId.current = requestAnimationFrame(updateEasingFactor);
+      }
+
+      requestAnimationFrame(updateEasingFactor);
+
+      return stopAnimation;
+    }
+  }, [startTime, duration, direction]);
+
+  return easingFactor;
+}
+
 type CardCarouselProps = {
   children?: ReactNode;
   direction?: Direction;
@@ -49,7 +92,13 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
   const containerElement = useRef<HTMLUListElement>(null);
   const [normMousePosition, setNormMousePosition] = useState(0);
   const isVertical = direction === Direction.VERTICAL;
+  const [mouseOverTime, setMouseOverTime] = useState<number>();
   const [isMouseOver, setIsMouseOver] = useState(false);
+  const easingFactor = useEasingFactor(
+    mouseOverTime,
+    EASING_MS,
+    isMouseOver ? EasingDirection.UP : EasingDirection.DOWN
+  );
 
   const {
     totalCards,
@@ -107,8 +156,12 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
     // - to 1 when mouse position is at or beyond FALLOFF * sliceLength
     const scaleAdjust = Math.min(distance, FALLOFF * sliceLength) / (FALLOFF * sliceLength);
     const scale = SCALE - SCALE_FACTOR * scaleAdjust;
+    // find difference between 1 and scale for easing -
+    // this way I can blend in the effects of the scaling over the duration of the easing curve
+    const scaleDifference = Math.abs(1 - scale);
 
-    return isMouseOver ? scale * basis : basis;
+    // easingFactor will automatically send scaling factor to 0 when direction changes
+    return (1 + easingFactor * scaleDifference) * basis;
   });
 
   const scaledLength = sizes.reduce((a, b) => a + b, 0) + gap * (totalCards - 1);
@@ -118,8 +171,14 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
     <ul
       ref={containerElement}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsMouseOver(true)}
-      onMouseLeave={() => setIsMouseOver(false)}
+      onMouseEnter={() => {
+        setMouseOverTime(Date.now());
+        setIsMouseOver(true);
+      }}
+      onMouseLeave={() => {
+        setMouseOverTime(Date.now());
+        setIsMouseOver(false);
+      }}
       className="relative overflow-hidden"
       style={{ [isVertical ? 'height' : 'width']: unscaledLength }}
     >

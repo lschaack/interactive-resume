@@ -322,6 +322,7 @@ export default function About() {
               height={640}
               width={640}
               alt="software engineer"
+              priority
             >
               software engineer
             </InternallyCaptionedImage>
@@ -332,6 +333,7 @@ export default function About() {
               height={640}
               width={640}
               alt="climber"
+              priority
             >
               climber
             </InternallyCaptionedImage>
@@ -342,6 +344,7 @@ export default function About() {
               height={640}
               width={640}
               alt="ball thrower"
+              priority
             >
               ball thrower
             </InternallyCaptionedImage>
@@ -352,6 +355,7 @@ export default function About() {
               height={640}
               width={640}
               alt="sound tinkerer"
+              priority
             >
               sound tinkerer
             </InternallyCaptionedImage>
@@ -362,6 +366,7 @@ export default function About() {
               height={640}
               width={640}
               alt="DSCF3628"
+              priority
             >
               DSCF3628
             </InternallyCaptionedImage>
@@ -372,6 +377,7 @@ export default function About() {
               height={640}
               width={640}
               alt="DSCF4344"
+              priority
             >
               DSCF4344
             </InternallyCaptionedImage>

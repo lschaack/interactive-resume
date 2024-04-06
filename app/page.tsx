@@ -172,6 +172,9 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
   const scaledLength = sizes.reduce((a, b) => a + b, 0) + gap * (totalCards - 1);
   const shift = compressRangeSymmetric(normMousePosition, sliceLength) * (scaledLength - unscaledLength);
 
+  // TODO: condense as much as possible w/sizes calculations
+  const crossAxisLength = (1 + easingFactor * Math.abs(1 - SCALE)) * basis;
+
   return (
     <ul
       ref={containerElement}
@@ -192,6 +195,7 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
         style={{
           // FIXME: this is broken going horizontally
           [isVertical ? 'top' : 'left']: -shift,
+          [isVertical ? 'width' : 'height']: crossAxisLength,
           flexDirection: isVertical ? 'column' : 'row',
           gap,
         }}
@@ -297,12 +301,12 @@ export default function About() {
           </Card>
           <Card>
             <InternallyCaptionedImage
-              src="/dog owner.jpeg"
+              src="/ball thrower.jpeg"
               height={640}
               width={640}
-              alt="dog owner"
+              alt="ball thrower"
             >
-              dog owner
+              ball thrower
             </InternallyCaptionedImage>
           </Card>
           <Card>

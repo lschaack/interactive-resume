@@ -1,7 +1,8 @@
 "use client"
 
 import { easeOutCubic } from "@/utils/easingFunctions";
-import Image from "next/image";
+import clsx from "clsx";
+import Image, { ImageProps } from "next/image";
 // TODO ^: make this mostly server-rendered
 
 import {
@@ -82,6 +83,9 @@ const useEasingFactor = (startTime: number | undefined, duration: number, direct
   return easingFactor;
 }
 
+// TODO: some way to fire handleMouseMove once on scroll end?
+// - seems like the only way to get mouse position is in a mouse event, which
+//   makes sense but scrolling doesn't fire any mouse events, might be SOL
 type CardCarouselProps = {
   children?: ReactNode;
   direction?: Direction;
@@ -215,6 +219,26 @@ const Card: FC<PropsWithChildren> = ({ children }) => {
   )
 }
 
+type InternallyCaptionedImageProps = ImageProps & {
+  children: string;
+  alt: string;
+};
+const InternallyCaptionedImage: FC<InternallyCaptionedImageProps> = ({ children, alt, ...imageProps }) => {
+  return (
+    <figure className="relative border-4 border-solid border-foreground dark:border-background">
+      <Image alt={alt} {...imageProps} />
+      <figcaption className={clsx(
+        'absolute bottom-0',
+        'bg-background dark:bg-foreground',
+        'border-t-4 border-solid border-foreground dark:border-background',
+        'p-1 w-full text-center'
+      )}>
+        {children}
+      </figcaption>
+    </figure>
+  );
+}
+
 export default function About() {
   return (
     <>
@@ -243,42 +267,71 @@ export default function About() {
             Serial personal project-starter, scope expander, and pre-polish abandoner
           </li>
         </ul> */}
+        {/* TODO: more descriptive alt text for all images */}
         <CardCarousel
           basis={160}
-          gap={12}
+          gap={4}
           // direction={Direction.HORIZONTAL}
         >
           <Card>
-            <Image
+            <InternallyCaptionedImage
               src="/software engineer.jpeg"
               height={640}
               width={640}
               alt="software engineer"
-            />
+            >
+              software engineer
+            </InternallyCaptionedImage>
           </Card>
           <Card>
-            <Image
+            <InternallyCaptionedImage
               src="/climber.jpeg"
               height={640}
               width={640}
               alt="climber"
-            />
+            >
+              climber
+            </InternallyCaptionedImage>
           </Card>
           <Card>
-            <Image
+            <InternallyCaptionedImage
               src="/dog owner.jpeg"
               height={640}
               width={640}
               alt="dog owner"
-            />
+            >
+              dog owner
+            </InternallyCaptionedImage>
           </Card>
           <Card>
-            <Image
+            <InternallyCaptionedImage
               src="/sound tinkerer.jpeg"
               height={640}
               width={640}
               alt="sound tinkerer"
-            />
+            >
+              sound tinkerer
+            </InternallyCaptionedImage>
+          </Card>
+          <Card>
+            <InternallyCaptionedImage
+              src="/DSCF3628.jpeg"
+              height={640}
+              width={640}
+              alt="DSCF3628"
+            >
+              DSCF3628
+            </InternallyCaptionedImage>
+          </Card>
+          <Card>
+            <InternallyCaptionedImage
+              src="/DSCF4344.jpeg"
+              height={640}
+              width={640}
+              alt="DSCF4344"
+            >
+              DSCF4344
+            </InternallyCaptionedImage>
           </Card>
         </CardCarousel>
         <p>

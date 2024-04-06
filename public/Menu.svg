@@ -1,0 +1,71 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_24_2)">
+<path d="M10 9C10 9.55228 9.55228 10 9 10C8.44772 10 8 9.55228 8 9C8 8.44772 8.44772 8 9 8C9.55228 8 10 8.44772 10 9Z" fill="white"/>
+<path d="M12 15L18.9282 18H5.0718L12 15Z" fill="black"/>
+<rect x="5" y="18" width="14" height="2" fill="black"/>
+<path d="M12 17V5" stroke="black" stroke-width="2"/>
+<path d="M6 8.42857L12 5V11L6 8.42857Z" fill="#FF0000" stroke="#FF0000" stroke-width="2"/>
+<rect width="24" height="24" transform="translate(24)" fill="#FF0000"/>
+<circle cx="36" cy="12" r="7.5" fill="black" stroke="black"/>
+<path d="M28.5 11L26.5 12L28.5 13V11Z" fill="black"/>
+<path d="M45.5 12L43.5 11V13L45.5 12Z" fill="black"/>
+<path d="M37 4.5H35L36 2.5L37 4.5Z" fill="black"/>
+<path d="M37 19.5H35L36 21.5L37 19.5Z" fill="black"/>
+<path d="M28.5 11L26.5 12L28.5 13V11Z" stroke="black"/>
+<path d="M45.5 12L43.5 11V13L45.5 12Z" stroke="black"/>
+<path d="M37 4.5H35L36 2.5L37 4.5Z" stroke="black"/>
+<path d="M37 19.5H35L36 21.5L37 19.5Z" stroke="black"/>
+<path d="M30 16.5L29 19L31.5 18L30 16.5Z" fill="black"/>
+<path d="M31.5 6L30 7.5L29 5L31.5 6Z" fill="black"/>
+<path d="M42 7.5L40.5 6L43 5L42 7.5Z" fill="black"/>
+<path d="M40.5 18L42 16.5L43 19L40.5 18Z" fill="black"/>
+<path d="M30 16.5L29 19L31.5 18L30 16.5Z" stroke="black"/>
+<path d="M31.5 6L30 7.5L29 5L31.5 6Z" stroke="black"/>
+<path d="M42 7.5L40.5 6L43 5L42 7.5Z" stroke="black"/>
+<path d="M40.5 18L42 16.5L43 19L40.5 18Z" stroke="black"/>
+<path d="M35 8.5C35 9.32843 34.3284 10 33.5 10C32.6716 10 32 9.32843 32 8.5C32 7.67157 32.6716 7 33.5 7C34.3284 7 35 7.67157 35 8.5Z" fill="white"/>
+<circle cx="12" cy="36" r="7.5" fill="black" stroke="black"/>
+<path d="M4.5 35L2.5 36L4.5 37V35Z" fill="black"/>
+<path d="M21.5 36L19.5 35V37L21.5 36Z" fill="black"/>
+<path d="M13 28.5H11L12 26.5L13 28.5Z" fill="black"/>
+<path d="M13 43.5H11L12 45.5L13 43.5Z" fill="black"/>
+<path d="M4.5 35L2.5 36L4.5 37V35Z" stroke="black"/>
+<path d="M21.5 36L19.5 35V37L21.5 36Z" stroke="black"/>
+<path d="M13 28.5H11L12 26.5L13 28.5Z" stroke="black"/>
+<path d="M13 43.5H11L12 45.5L13 43.5Z" stroke="black"/>
+<path d="M6 40.5L5 43L7.5 42L6 40.5Z" fill="black"/>
+<path d="M7.5 30L6 31.5L5 29L7.5 30Z" fill="black"/>
+<path d="M18 31.5L16.5 30L19 29L18 31.5Z" fill="black"/>
+<path d="M16.5 42L18 40.5L19 43L16.5 42Z" fill="black"/>
+<path d="M6 40.5L5 43L7.5 42L6 40.5Z" stroke="black"/>
+<path d="M7.5 30L6 31.5L5 29L7.5 30Z" stroke="black"/>
+<path d="M18 31.5L16.5 30L19 29L18 31.5Z" stroke="black"/>
+<path d="M16.5 42L18 40.5L19 43L16.5 42Z" stroke="black"/>
+<path d="M11 32.5C11 33.3284 10.3284 34 9.5 34C8.67157 34 8 33.3284 8 32.5C8 31.6716 8.67157 31 9.5 31C10.3284 31 11 31.6716 11 32.5Z" fill="white"/>
+<path d="M22 26L2 46M2 26L22 46" stroke="#FF0000" stroke-width="2"/>
+<circle cx="36" cy="36" r="7.5" fill="black" stroke="black"/>
+<path d="M28.5 35L26.5 36L28.5 37V35Z" fill="black"/>
+<path d="M45.5 36L43.5 35V37L45.5 36Z" fill="black"/>
+<path d="M37 28.5H35L36 26.5L37 28.5Z" fill="black"/>
+<path d="M37 43.5H35L36 45.5L37 43.5Z" fill="black"/>
+<path d="M28.5 35L26.5 36L28.5 37V35Z" stroke="black"/>
+<path d="M45.5 36L43.5 35V37L45.5 36Z" stroke="black"/>
+<path d="M37 28.5H35L36 26.5L37 28.5Z" stroke="black"/>
+<path d="M37 43.5H35L36 45.5L37 43.5Z" stroke="black"/>
+<path d="M30 40.5L29 43L31.5 42L30 40.5Z" fill="black"/>
+<path d="M31.5 30L30 31.5L29 29L31.5 30Z" fill="black"/>
+<path d="M42 31.5L40.5 30L43 29L42 31.5Z" fill="black"/>
+<path d="M40.5 42L42 40.5L43 43L40.5 42Z" fill="black"/>
+<path d="M30 40.5L29 43L31.5 42L30 40.5Z" stroke="black"/>
+<path d="M31.5 30L30 31.5L29 29L31.5 30Z" stroke="black"/>
+<path d="M42 31.5L40.5 30L43 29L42 31.5Z" stroke="black"/>
+<path d="M40.5 42L42 40.5L43 43L40.5 42Z" stroke="black"/>
+<path d="M35 32.5C35 33.3284 34.3284 34 33.5 34C32.6716 34 32 33.3284 32 32.5C32 31.6716 32.6716 31 33.5 31C34.3284 31 35 31.6716 35 32.5Z" fill="white"/>
+</g>
+<rect x="0.5" y="0.5" width="47" height="47" stroke="black"/>
+<defs>
+<clipPath id="clip0_24_2">
+<rect width="48" height="48" fill="white"/>
+</clipPath>
+</defs>
+</svg>

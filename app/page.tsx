@@ -32,6 +32,7 @@ enum EasingDirection {
   DOWN,
 }
 
+// TODO: create controls for these things so that I can test them all out quickly
 // scale is how large the card will be with the cursor at the normed center
 const SCALE = 3;
 // min scale is how small the card can possibly be as a factor of `basis`
@@ -39,7 +40,7 @@ const MIN_SCALE = 1;
 // SCALE_FACTOR is how much SCALE needs to decrease to get to MIN_SCALE at max distance
 const SCALE_FACTOR = SCALE - MIN_SCALE;
 // falloff is how many slice lengths it takes for a card to reach MIN_SCALE
-const FALLOFF = 1;
+const FALLOFF = 2;
 // how many MS to increase to full scaling on carousel mouse over
 const EASING_MS = 200;
 
@@ -53,7 +54,7 @@ const CardFocus = createContext<CardFocusContext>({
   blur: () => undefined,
 });
 
-const useEasingFactor = (startTime: number | undefined, duration: number, direction = EasingDirection.UP) => {
+const useEasingFactor = (startTime: number | undefined, duration: number, direction = EasingDirection.UP, delay = 0) => {
   const [easingFactor, setEasingFactor] = useState(0);
   const frameId = useRef<number>();
 
@@ -70,7 +71,7 @@ const useEasingFactor = (startTime: number | undefined, duration: number, direct
       else setEasingFactor(1);
 
       const updateEasingFactor = () => {
-        const msPassed = Date.now() - startTime;
+        const msPassed = Math.max(0, Date.now() - startTime - delay);
         const normTimePassed = Math.min(msPassed / duration, 1);
         const easingFactor = direction === EasingDirection.UP
           ? easeOutCubic(normTimePassed)
@@ -78,7 +79,11 @@ const useEasingFactor = (startTime: number | undefined, duration: number, direct
 
         setEasingFactor(easingFactor);
 
-        if (easingFactor === 1) stopAnimation();
+        const limitReached = direction === EasingDirection.UP
+          ? easingFactor === 1
+          : easingFactor === 0;
+
+        if (limitReached) stopAnimation();
         else frameId.current = requestAnimationFrame(updateEasingFactor);
       }
 
@@ -86,7 +91,7 @@ const useEasingFactor = (startTime: number | undefined, duration: number, direct
 
       return stopAnimation;
     }
-  }, [startTime, duration, direction]);
+  }, [startTime, duration, direction, delay]);
 
   return easingFactor;
 }
@@ -106,7 +111,8 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
   const easingFactor = useEasingFactor(
     mouseOverTime,
     EASING_MS,
-    isMouseOver ? EasingDirection.UP : EasingDirection.DOWN
+    isMouseOver ? EasingDirection.UP : EasingDirection.DOWN,
+    100
   );
 
   const {
@@ -217,12 +223,13 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
         setIsMouseOver(false);
       }}
       className="relative overflow-clip"
-      style={{ [isVertical ? 'height' : 'width']: unscaledLength }}
+      style={{
+        height: isVertical ? unscaledLength : 'unset',
+      }}
     >
       <div
         className="relative flex"
         style={{
-          // FIXME: this is broken going horizontally
           [isVertical ? 'top' : 'left']: -shift,
           [isVertical ? 'width' : 'height']: crossAxisLength,
           flexDirection: isVertical ? 'column' : 'row',
@@ -283,6 +290,8 @@ const InternallyCaptionedImage: FC<InternallyCaptionedImageProps> = ({ children,
   );
 }
 
+// FIXME: edge case when focused on link below carousel w/cursor near the bottom
+// of the horizontal carousel
 export default function About() {
   return (
     <>

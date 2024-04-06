@@ -1,6 +1,7 @@
 "use client"
 
 import { easeOutCubic } from "@/utils/easingFunctions";
+import { compressRangeSymmetric } from "@/utils/ranges";
 import clsx from "clsx";
 import Image, { ImageProps } from "next/image";
 // TODO ^: make this mostly server-rendered
@@ -169,7 +170,7 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
   });
 
   const scaledLength = sizes.reduce((a, b) => a + b, 0) + gap * (totalCards - 1);
-  const shift = normMousePosition * (scaledLength - unscaledLength);
+  const shift = compressRangeSymmetric(normMousePosition, sliceLength) * (scaledLength - unscaledLength);
 
   return (
     <ul
@@ -187,9 +188,10 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
       style={{ [isVertical ? 'height' : 'width']: unscaledLength }}
     >
       <div
-        className="absolute flex"
+        className="relative flex"
         style={{
-          top: -shift,
+          // FIXME: this is broken going horizontally
+          [isVertical ? 'top' : 'left']: -shift,
           flexDirection: isVertical ? 'column' : 'row',
           gap,
         }}

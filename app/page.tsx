@@ -9,15 +9,14 @@ import Image, { ImageProps } from "next/image";
 import {
   Children,
   FC,
+  FocusEventHandler,
   MouseEventHandler,
   PropsWithChildren,
   ReactNode,
-  RefObject,
   createContext,
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState
@@ -45,6 +44,14 @@ const FALLOFF = 1;
 const EASING_MS = 200;
 
 const CardSize = createContext(0);
+type CardFocusContext = {
+  focus: FocusEventHandler;
+  blur: FocusEventHandler;
+}
+const CardFocus = createContext<CardFocusContext>({
+  focus: () => undefined,
+  blur: () => undefined,
+});
 
 const useEasingFactor = (startTime: number | undefined, duration: number, direction = EasingDirection.UP) => {
   const [easingFactor, setEasingFactor] = useState(0);
@@ -84,9 +91,6 @@ const useEasingFactor = (startTime: number | undefined, duration: number, direct
   return easingFactor;
 }
 
-// TODO: some way to fire handleMouseMove once on scroll end?
-// - seems like the only way to get mouse position is in a mouse event, which
-//   makes sense but scrolling doesn't fire any mouse events, might be SOL
 type CardCarouselProps = {
   children?: ReactNode;
   direction?: Direction;
@@ -110,23 +114,47 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
     unscaledLength,
     sliceLength,
     positions,
+    focusHandlers,
   } = useMemo(() => {
     const totalCards = Children.count(children);
-    const unscaledLength = totalCards * (basis + gap) - gap;
+    const unscaledLength = totalCards * (basis + gap) + gap;
     // percentage of total length taken up by cards
     const normTotalCardLength = totalCards * basis / unscaledLength;
     // percentage of total length taken up by gaps
     const normTotalGapLength = 1 - normTotalCardLength;
     // normed length of a single card
     const normCardLength = normTotalCardLength / totalCards;
+    const halfNormCardLength = normCardLength / 2;
     // normed length of a single gap
     const normGapLength = normTotalGapLength / totalCards;
     const sliceLength = normCardLength + normGapLength;
 
-    const halfNormCardLength = normCardLength / 2;
     const positions: number[] = [];
+    const focusHandlers: CardFocusContext[] = [];
     for (let i = 0; i < totalCards; i++) {
       positions.push(halfNormCardLength + i * sliceLength);
+
+      focusHandlers.push({
+        focus: () => {
+          // mock the cursor being positioned over this card
+          setNormMousePosition(positions[i]);
+
+          setIsMouseOver(isMouseOver => {
+            if (!isMouseOver) setMouseOverTime(Date.now());
+
+            return true;
+          });
+        },
+        // detect if next focus is going to another card
+        blur: e => {
+          const nextFocusIsCard = e.relatedTarget?.parentElement === e.currentTarget.parentElement;
+
+          if (!nextFocusIsCard) {
+            setMouseOverTime(Date.now());
+            setIsMouseOver(false);
+          }
+        }
+      });
     }
 
     return {
@@ -134,6 +162,7 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
       unscaledLength,
       sliceLength,
       positions,
+      focusHandlers,
     }
   }, [basis, gap, children]);
 
@@ -169,11 +198,11 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
     return (1 + easingFactor * scaleDifference) * basis;
   });
 
-  const scaledLength = sizes.reduce((a, b) => a + b, 0) + gap * (totalCards - 1);
+  const scaledLength = sizes.reduce((a, b) => a + b, 0) + gap * (totalCards + 1);
   const shift = compressRangeSymmetric(normMousePosition, sliceLength) * (scaledLength - unscaledLength);
 
-  // TODO: condense as much as possible w/sizes calculations
-  const crossAxisLength = (1 + easingFactor * Math.abs(1 - SCALE)) * basis;
+  // when scaling, set cross axis to the maximum scale to minimize reflow (eased)
+  const crossAxisLength = (1 + easingFactor * Math.abs(1 - SCALE)) * basis + 2 * gap;
 
   return (
     <ul
@@ -198,11 +227,14 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
           [isVertical ? 'width' : 'height']: crossAxisLength,
           flexDirection: isVertical ? 'column' : 'row',
           gap,
+          padding: gap,
         }}
       >
         {Children.map(children, (child, index) => (
           <CardSize.Provider value={sizes[index]}>
-            {child}
+            <CardFocus.Provider value={focusHandlers[index]}>
+              {child}
+            </CardFocus.Provider>
           </CardSize.Provider>
         ))}
       </div>
@@ -212,9 +244,14 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
 
 const Card: FC<PropsWithChildren> = ({ children }) => {
   const size = useContext(CardSize);
+  const { focus, blur } = useContext(CardFocus);
 
   return (
     <li
+      tabIndex={0}
+      className="outline-none focus:shadow-outline"
+      onFocus={focus}
+      onBlur={blur}
       style={{
         height: size,
         width: size,

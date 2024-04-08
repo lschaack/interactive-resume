@@ -1,3 +1,5 @@
+import { curry } from "lodash/fp";
+
 export const memoize = <ArgType extends Array<T>, ReturnType, T = any>(fn: (...args: ArgType) => ReturnType) => {
   const memoized = new Map();
 
@@ -13,6 +15,11 @@ export const easeInOutCubic = (t: number) => (
   t < 0.5
     ? easeInCubic(2 * t) / 2
     : 1 - easeInCubic(2 * (1 - t)) / 2
+);
+
+export const easeOutSine = curry((elbow: number, t: number) => Math.pow(Math.sin(Math.PI * t / 2), elbow));
+export const inverseEaseOutSine = curry((elbow: number, e: number) => (
+  2 * Math.asin(Math.pow(e, 1 / elbow)) / Math.PI)
 );
 
 export const easeInOutCubicInflection = memoize(

@@ -1,6 +1,10 @@
 "use client"
 
-import { easeOutCubic } from "@/utils/easingFunctions";
+import {
+  easeOutCubic,
+  easeOutSine as _easeOutSine,
+  inverseEaseOutSine as _inverseEaseOutSine
+} from "@/utils/easingFunctions";
 import { compressRangeSymmetric } from "@/utils/ranges";
 import clsx from "clsx";
 import Image, { ImageProps } from "next/image";
@@ -43,6 +47,12 @@ const SCALE_FACTOR = SCALE - MIN_SCALE;
 const FALLOFF = 2;
 // how many MS to increase to full scaling on carousel mouse over
 const EASING_MS = 200;
+// kind of vague, but lower results in a tighter elbow - higher differential
+// between the fastest and the slowest phases of the animation
+const EASING_ELBOW = 0.5;
+
+const easeOutSine = _easeOutSine(EASING_ELBOW);
+const inverseEaseOutSine = _inverseEaseOutSine(EASING_ELBOW);
 
 const CardSize = createContext(0);
 type CardFocusContext = {
@@ -54,44 +64,62 @@ const CardFocus = createContext<CardFocusContext>({
   blur: () => undefined,
 });
 
-const useEasingFactor = (startTime: number | undefined, duration: number, direction = EasingDirection.UP, delay = 0) => {
-  const [easingFactor, setEasingFactor] = useState(0);
-  const frameId = useRef<number>();
+const requestEasingFrames = (
+  startingFactor: number,
+  totalDuration: number,
+  direction: EasingDirection,
+  callback: (easingFactor: number) => void
+) => {
+  // using the current easing factor, find the time we're at in the easing
+  // curve indicated by direction, then "finish" the animation from that point
+  const isUp = direction === EasingDirection.UP;
+  let normTime = isUp
+    ? inverseEaseOutSine(startingFactor)
+    : inverseEaseOutSine(1 - startingFactor);
+  let prevTime = Date.now();
+  let currentFrameId: number;
 
-  useEffect(() => {
-    if (startTime) {
-      const stopAnimation = () => {
-        if (frameId.current) {
-          cancelAnimationFrame(frameId.current);
-          frameId.current = undefined;
-        }
-      }
-
-      if (direction === EasingDirection.UP) setEasingFactor(0);
-      else setEasingFactor(1);
-
-      const updateEasingFactor = () => {
-        const msPassed = Math.max(0, Date.now() - startTime - delay);
-        const normTimePassed = Math.min(msPassed / duration, 1);
-        const easingFactor = direction === EasingDirection.UP
-          ? easeOutCubic(normTimePassed)
-          : 1 - easeOutCubic(normTimePassed);
-
-        setEasingFactor(easingFactor);
-
-        const limitReached = direction === EasingDirection.UP
-          ? easingFactor === 1
-          : easingFactor === 0;
-
-        if (limitReached) stopAnimation();
-        else frameId.current = requestAnimationFrame(updateEasingFactor);
-      }
-
-      requestAnimationFrame(updateEasingFactor);
-
-      return stopAnimation;
+  const stopAnimation = () => {
+    if (currentFrameId) {
+      cancelAnimationFrame(currentFrameId);
     }
-  }, [startTime, duration, direction, delay]);
+  }
+
+  const updateEasingFactor: FrameRequestCallback = () => {
+    const currTime = Date.now();
+    const msPassed = currTime - prevTime;
+    const normMsPassed = msPassed / totalDuration;
+    prevTime = currTime;
+    normTime = Math.min(normTime + normMsPassed, 1);
+
+    const easingFactor = isUp
+      ? easeOutSine(normTime)
+      : 1 - easeOutSine(normTime);
+
+    const limitReached = isUp
+      ? easingFactor === 1
+      : easingFactor === 0;
+
+    if (limitReached) stopAnimation();
+    else currentFrameId = requestAnimationFrame(updateEasingFactor);
+
+    callback(easingFactor);
+  }
+
+  requestAnimationFrame(updateEasingFactor);
+
+  return stopAnimation;
+}
+const useEasingFactor = (duration: number, direction = EasingDirection.UP) => {
+  const [easingFactor, setEasingFactor] = useState(0);
+
+  useEffect(
+    () => requestEasingFrames(easingFactor, duration, direction, setEasingFactor),
+    // easingFactor needs to be tracked in state to fire rerenders for components using this hook,
+    // but this effect should only really fire when direction changes (otherwise animation will be
+    // continually stopped and restarted)
+    [duration, direction] // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   return easingFactor;
 }
@@ -106,13 +134,10 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
   const containerElement = useRef<HTMLUListElement>(null);
   const [normMousePosition, setNormMousePosition] = useState(0);
   const isVertical = direction === Direction.VERTICAL;
-  const [mouseOverTime, setMouseOverTime] = useState<number>();
   const [isMouseOver, setIsMouseOver] = useState(false);
   const easingFactor = useEasingFactor(
-    mouseOverTime,
     EASING_MS,
-    isMouseOver ? EasingDirection.UP : EasingDirection.DOWN,
-    100
+    isMouseOver ? EasingDirection.UP : EasingDirection.DOWN
   );
 
   const {
@@ -145,18 +170,13 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
           // mock the cursor being positioned over this card
           setNormMousePosition(positions[i]);
 
-          setIsMouseOver(isMouseOver => {
-            if (!isMouseOver) setMouseOverTime(Date.now());
-
-            return true;
-          });
+          setIsMouseOver(true);
         },
         // detect if next focus is going to another card
         blur: e => {
           const nextFocusIsCard = e.relatedTarget?.parentElement === e.currentTarget.parentElement;
 
           if (!nextFocusIsCard) {
-            setMouseOverTime(Date.now());
             setIsMouseOver(false);
           }
         }
@@ -214,17 +234,12 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
     <ul
       ref={containerElement}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => {
-        setMouseOverTime(Date.now());
-        setIsMouseOver(true);
-      }}
-      onMouseLeave={() => {
-        setMouseOverTime(Date.now());
-        setIsMouseOver(false);
-      }}
+      onMouseEnter={() => setIsMouseOver(true)}
+      onMouseLeave={() => setIsMouseOver(false)}
       className="relative overflow-clip"
       style={{
-        height: isVertical ? unscaledLength : 'unset',
+        // height: isVertical ? unscaledLength : 'unset',
+        [isVertical ? 'height' : 'width']: unscaledLength
       }}
     >
       <div

@@ -272,7 +272,7 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
       )}
       style={{
         // container has an additional gap on each side for padding
-        [isVertical ? 'max-height' : 'max-width']: unscaledLength + roomForPadding
+        [isVertical ? 'maxHeight' : 'maxWidth']: unscaledLength + roomForPadding
       }}
     >
       <div

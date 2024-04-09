@@ -46,7 +46,7 @@ const EducationItem: FC<EducationItemProps> = ({
 export default function Education() {
   return (
     <>
-      <h2 className="text-xl font-bold">
+      <h2 className="text-xl">
         Education
       </h2>
       <ul className="flex flex-wrap gap-x-12 gap-y-6">

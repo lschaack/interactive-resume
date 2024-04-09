@@ -26,7 +26,7 @@ const InternallyCaptionedImage: FC<InternallyCaptionedImageProps> = ({ children,
 export default function About() {
   return (
     <>
-      <h2 className="text-xl font-bold">
+      <h2 className="text-xl">
         About
       </h2>
       <div className="flex flex-col gap-y-3 font-normal">

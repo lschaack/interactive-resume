@@ -22,7 +22,7 @@ const ExperienceItem: FC<ExperienceItemProps> = ({ title, timeline, children }) 
 export default function Experience() {
   return (
     <>
-      <h2 className="text-xl font-bold">
+      <h2 className="text-xl">
         Experience
       </h2>
       <ol className="flex flex-wrap gap-x-24 gap-y-6">

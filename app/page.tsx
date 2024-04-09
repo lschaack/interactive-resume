@@ -129,8 +129,9 @@ type CardCarouselProps = {
   direction?: Direction;
   basis: number;
   gap: number;
+  className?: string;
 }
-const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.VERTICAL, basis, gap }) => {
+const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.VERTICAL, basis, gap, className }) => {
   const containerElement = useRef<HTMLUListElement>(null);
   const [normMousePosition, setNormMousePosition] = useState(0);
   const isVertical = direction === Direction.VERTICAL;
@@ -148,7 +149,7 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
     focusHandlers,
   } = useMemo(() => {
     const totalCards = Children.count(children);
-    const unscaledLength = totalCards * (basis + gap) + gap;
+    const unscaledLength = totalCards * (basis + gap) - gap;
     // percentage of total length taken up by cards
     const normTotalCardLength = totalCards * basis / unscaledLength;
     // percentage of total length taken up by gaps
@@ -224,11 +225,11 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
     return (1 + easingFactor * scaleDifference) * basis;
   });
 
-  const scaledLength = sizes.reduce((a, b) => a + b, 0) + gap * (totalCards + 1);
+  const scaledLength = sizes.reduce((a, b) => a + b) + gap * (totalCards - 1);
   const shift = compressRangeSymmetric(normMousePosition, sliceLength) * (scaledLength - unscaledLength);
 
   // when scaling, set cross axis to the maximum scale to minimize reflow (eased)
-  const crossAxisLength = (1 + easingFactor * Math.abs(1 - SCALE)) * basis + 2 * gap;
+  const crossAxisLength = (1 + easingFactor * Math.abs(1 - SCALE)) * basis;
 
   return (
     <ul
@@ -236,10 +237,15 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsMouseOver(true)}
       onMouseLeave={() => setIsMouseOver(false)}
-      className="relative overflow-clip"
+      className={clsx(
+        'relative overflow-clip p-1',
+        'border-4 border-solid border-foreground dark:border-background',
+        className
+      )}
       style={{
         // height: isVertical ? unscaledLength : 'unset',
-        [isVertical ? 'height' : 'width']: unscaledLength
+        // container has an additional gap on each side for padding
+        [isVertical ? 'height' : 'width']: unscaledLength + 4 * gap
       }}
     >
       <div
@@ -250,7 +256,6 @@ const CardCarousel: FC<CardCarouselProps> = ({ children, direction = Direction.V
           flexDirection: isVertical ? 'column' : 'row',
           alignItems: isVertical ? 'unset' : 'center',
           gap,
-          padding: gap,
         }}
       >
         {Children.map(children, (child, index) => (

@@ -1,7 +1,10 @@
+"use client";
+
 import { FC } from "react";
 import clsx from "clsx";
 import Image, { ImageProps } from "next/image";
 import { Card, CardCarousel } from "./components/CardCarousel";
+import { useIsMobile } from "./components/MediaProvider";
 
 type InternallyCaptionedImageProps = ImageProps & {
   children: string;
@@ -24,6 +27,8 @@ const InternallyCaptionedImage: FC<InternallyCaptionedImageProps> = ({ children,
 }
 
 export default function About() {
+  const { isMobile } = useIsMobile();
+
   return (
     <>
       <h2 className="text-xl">
@@ -34,28 +39,10 @@ export default function About() {
         <p>
           My name is Luke Schaack, and I am a:
         </p>
-        {/* <ul className="marker:text-slate-600 list-disc pl-6">
-          <li>
-            Software engineer
-          </li>
-          <li>
-            Climber
-          </li>
-          <li>
-            Dog owner
-          </li>
-          <li>
-            Sound tinkerer
-          </li>
-          <li>
-            Serial personal project-starter, scope expander, and pre-polish abandoner
-          </li>
-        </ul> */}
-        {/* TODO: more descriptive alt text for all images */}
         <CardCarousel
           basis={160}
           gap={4}
-          direction="horizontal"
+          direction={isMobile ? 'vertical' : 'horizontal'}
           className="self-center sm:self-start"
         >
           <Card>
@@ -63,7 +50,7 @@ export default function About() {
               src="/software engineer.jpeg"
               height={640}
               width={640}
-              alt="software engineer"
+              alt="A photo of me at Ocean Beach, wearing a backpack (like software engineers do) and looking out towards the water."
               priority
             >
               software engineer
@@ -74,7 +61,7 @@ export default function About() {
               src="/climber.jpeg"
               height={640}
               width={640}
-              alt="climber"
+              alt="A photo of me rappelling down a slab climb on The Egg near Mickey's Beach."
               priority
             >
               climber
@@ -82,10 +69,21 @@ export default function About() {
           </Card>
           <Card>
             <InternallyCaptionedImage
+              src="/clay thrower.jpeg"
+              height={640}
+              width={640}
+              alt="A photo of me hunched over a pottery wheel covered in clay, cleaning up a small vase."
+              priority
+            >
+              clay thrower
+            </InternallyCaptionedImage>
+          </Card>
+          <Card>
+            <InternallyCaptionedImage
               src="/ball thrower.jpeg"
               height={640}
               width={640}
-              alt="ball thrower"
+              alt="A photo of me staring at a ball with bulging eyes while my dog Orzo sits on my shoulder doing the same thing."
               priority
             >
               ball thrower
@@ -96,7 +94,7 @@ export default function About() {
               src="/sound tinkerer.jpeg"
               height={640}
               width={640}
-              alt="sound tinkerer"
+              alt="A photo of me sitting at a desk at night, lit by the backlight of a monitor hidden behind a set of speakers."
               priority
             >
               sound tinkerer
@@ -104,27 +102,19 @@ export default function About() {
           </Card>
           <Card>
             <InternallyCaptionedImage
-              src="/DSCF3628.jpeg"
+              src="/SF dweller.jpeg"
               height={640}
               width={640}
-              alt="DSCF3628"
+              alt="A photo of me on Bernal Hill at night with my back to the city center, looking left towards the Bay."
               priority
             >
-              DSCF3628
-            </InternallyCaptionedImage>
-          </Card>
-          <Card>
-            <InternallyCaptionedImage
-              src="/DSCF4344.jpeg"
-              height={640}
-              width={640}
-              alt="DSCF4344"
-              priority
-            >
-              DSCF4344
+              SF dweller
             </InternallyCaptionedImage>
           </Card>
         </CardCarousel>
+        <p>
+          And a serial personal project-starter, scope expander, and pre-polish abandoner.
+        </p>
         <p>
           That last one might sound like a bad thing, but my professional track record is very different! The same standard that prevents me from putting out work until it’s highly polished drives me to make features watertight when scope is limited.
         </p>

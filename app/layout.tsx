@@ -8,6 +8,7 @@ import "./globals.css";
 import { SideNav } from "./components/SideNav";
 import { NavProvider } from "./components/NavProvider";
 import { Header } from "./components/Header";
+import { MediaProvider } from "./components/MediaProvider";
 
 const noto_sans = Noto_Sans({
   subsets: ['latin'],
@@ -55,19 +56,21 @@ export default function RootLayout({
         'font-sans bg-background text-foreground',
         'dark:bg-background-dark dark:text-foreground-dark'
       )}>
-        <NavProvider>
-          <div className={clsx(
-            'grid sm:p-6',
-            'grid-rows-layout-mobile grid-cols-layout-mobile',
-            'sm:grid-rows-layout-desktop sm:grid-cols-layout-desktop'
-          )}>
-            <Header />
-            <SideNav />
-            <main className="p-6 flex flex-col gap-y-3 items-center sm:items-start">
-              {children}
-            </main>
-          </div>
-        </NavProvider>
+        <MediaProvider>
+          <NavProvider>
+            <div className={clsx(
+              'grid sm:p-6',
+              'grid-rows-layout-mobile grid-cols-layout-mobile',
+              'sm:grid-rows-layout-desktop sm:grid-cols-layout-desktop'
+            )}>
+              <Header />
+              <SideNav />
+              <main className="p-6 flex flex-col gap-y-3 items-center sm:items-start">
+                {children}
+              </main>
+            </div>
+          </NavProvider>
+        </MediaProvider>
       </body>
     </html>
   );

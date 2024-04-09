@@ -9,6 +9,7 @@ import clsx from "clsx";
 import { useNav } from "./NavProvider";
 import { IconButton } from "./IconButton";
 import FocusTrap from "focus-trap-react";
+import { useIsMobile } from "./MediaProvider";
 
 type Section = {
   name: string;
@@ -59,8 +60,9 @@ const NavEntry: FC<NavEntryProps> = ({ section: { name, pathname }, autoFocus = 
 }
 
 export const SideNav = () => {
+  const { isMobile } = useIsMobile();
   // NOTE: isOpen only has an effect on mobile - on desktop the nav is always open
-  const { isOpen, setIsOpen, isMobile } = useNav();
+  const { isOpen, setIsOpen } = useNav();
   const pathname = usePathname();
 
   // automatically close on navigation
@@ -74,7 +76,7 @@ export const SideNav = () => {
         <div
           className={clsx(
             'z-40',
-            'absolute w-full h-full',
+            'absolute w-screen h-screen',
             'bg-slate-800 bg-opacity-50',
             'cursor-not-allowed',
           )}

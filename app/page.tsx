@@ -56,6 +56,7 @@ export default function About() {
           basis={160}
           gap={4}
           direction="horizontal"
+          className="self-center sm:self-start"
         >
           <Card>
             <InternallyCaptionedImage

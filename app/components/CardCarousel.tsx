@@ -33,8 +33,6 @@ export enum EasingDirection {
 const SCALE = 3;
 // min scale is how small the card can possibly be as a factor of `basis`
 const MIN_SCALE = 1;
-// SCALE_FACTOR is how much SCALE needs to decrease to get to MIN_SCALE at max distance
-const SCALE_FACTOR = SCALE - MIN_SCALE;
 // falloff is how many slice lengths it takes for a card to reach MIN_SCALE
 const FALLOFF = 2;
 // how many MS to increase to full scaling on carousel mouse over
@@ -160,6 +158,7 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
     sliceLength,
     positions,
     focusHandlers,
+    roomForPadding,
   } = useMemo(() => {
     const totalCards = Children.count(children);
     const unscaledLength = totalCards * (basis + gap) - gap;
@@ -173,6 +172,12 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
     // normed length of a single gap
     const normGapLength = normTotalGapLength / totalCards;
     const sliceLength = normCardLength + normGapLength;
+    // calculations for container sizing need to account for additional room for padding on either
+    // side of the card container, but I'm gonna be perfectly honest - this is an experimental
+    // value and I have no idea why it's `4 *` instead of `2 *`...best guess is the similarly 4px
+    // border, but explicitly setting box-sizing to 'border-box' doesn't seem to affect how large
+    // this value needs to be
+    const roomForPadding = 4 * gap;
 
     const positions: number[] = [];
     const focusHandlers: CardFocusContext[] = [];
@@ -203,6 +208,7 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
       sliceLength,
       positions,
       focusHandlers,
+      roomForPadding,
     }
   }, [basis, gap, children]);
 
@@ -222,6 +228,15 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
     }
   }, [isVertical, unscaledLength]);
 
+  const parentCrossAxisLength = containerElement?.current?.parentElement?.getBoundingClientRect()[isVertical ? 'width' : 'height'];
+  // if SCALE would push beyond the bounds of the container,
+  // only use up to maximum available cross-axis space
+  const maxAvailableScale = parentCrossAxisLength
+    ? Math.min(SCALE, parentCrossAxisLength / (basis + roomForPadding))
+    : SCALE;
+  // SCALE_FACTOR is how much SCALE needs to decrease to get to MIN_SCALE at max distance
+  const scaleFactor = maxAvailableScale - MIN_SCALE;
+
   const sizes = positions.map(normCardPosition => {
     const distance = Math.abs(normMousePosition - normCardPosition);
     // linear falloff over the length of FALLOFF slices
@@ -229,7 +244,7 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
     // - 0 when mouse position is at card position
     // - to 1 when mouse position is at or beyond FALLOFF * sliceLength
     const scaleAdjust = Math.min(distance, FALLOFF * sliceLength) / (FALLOFF * sliceLength);
-    const scale = SCALE - SCALE_FACTOR * scaleAdjust;
+    const scale = maxAvailableScale - scaleFactor * scaleAdjust;
     // find difference between 1 and scale for easing -
     // this way I can blend in the effects of the scaling over the duration of the easing curve
     const scaleDifference = Math.abs(1 - scale);
@@ -242,7 +257,7 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
   const shift = compressRangeSymmetric(normMousePosition, sliceLength) * (scaledLength - unscaledLength);
 
   // when scaling, set cross axis to the maximum scale to minimize reflow (eased)
-  const crossAxisLength = (1 + easingFactor * Math.abs(1 - SCALE)) * basis;
+  const crossAxisLength = (1 + easingFactor * Math.abs(1 - maxAvailableScale)) * basis;
 
   return (
     <ul
@@ -256,9 +271,8 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
         className
       )}
       style={{
-        // height: isVertical ? unscaledLength : 'unset',
         // container has an additional gap on each side for padding
-        [isVertical ? 'height' : 'width']: unscaledLength + 4 * gap
+        [isVertical ? 'max-height' : 'max-width']: unscaledLength + roomForPadding
       }}
     >
       <div
@@ -267,7 +281,7 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
           [isVertical ? 'top' : 'left']: -shift,
           [isVertical ? 'width' : 'height']: crossAxisLength,
           flexDirection: isVertical ? 'column' : 'row',
-          alignItems: isVertical ? 'unset' : 'center',
+          alignItems: 'center',
           gap,
         }}
       >

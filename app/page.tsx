@@ -4,7 +4,7 @@ import { FC } from "react";
 import clsx from "clsx";
 import Image, { ImageProps } from "next/image";
 import { Card, CardCarousel } from "./components/CardCarousel";
-import { useIsMobile } from "./components/MediaProvider";
+import { useResizeValue } from "./hooks/useResizeValue";
 
 type InternallyCaptionedImageProps = ImageProps & {
   children: string;
@@ -27,7 +27,7 @@ const InternallyCaptionedImage: FC<InternallyCaptionedImageProps> = ({ children,
 }
 
 export default function About() {
-  const { isMobile } = useIsMobile();
+  const canFitFourCards = useResizeValue(() => window.matchMedia('(min-width: 1024px)').matches);
 
   return (
     <>
@@ -42,7 +42,7 @@ export default function About() {
         <CardCarousel
           basis={160}
           gap={4}
-          direction={isMobile ? 'vertical' : 'horizontal'}
+          direction={canFitFourCards ? 'horizontal' : 'vertical'}
           className="self-center sm:self-start"
         >
           <Card>
@@ -69,17 +69,6 @@ export default function About() {
           </Card>
           <Card>
             <InternallyCaptionedImage
-              src="/clay thrower.jpeg"
-              height={640}
-              width={640}
-              alt="A photo of me hunched over a pottery wheel covered in clay, cleaning up a small vase."
-              priority
-            >
-              clay thrower
-            </InternallyCaptionedImage>
-          </Card>
-          <Card>
-            <InternallyCaptionedImage
               src="/ball thrower.jpeg"
               height={640}
               width={640}
@@ -98,17 +87,6 @@ export default function About() {
               priority
             >
               sound tinkerer
-            </InternallyCaptionedImage>
-          </Card>
-          <Card>
-            <InternallyCaptionedImage
-              src="/SF dweller.jpeg"
-              height={640}
-              width={640}
-              alt="A photo of me on Bernal Hill at night with my back to the city center, looking left towards the Bay."
-              priority
-            >
-              SF dweller
             </InternallyCaptionedImage>
           </Card>
         </CardCarousel>

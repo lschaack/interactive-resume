@@ -1,8 +1,9 @@
 "use client";
 
-import { FC, ReactNode, createContext, useContext, useEffect, useState } from "react";
+import { FC, ReactNode, createContext, useContext } from "react";
 
 import { getIsMobile } from "@/utils/media";
+import { useResizeValue } from "../hooks/useResizeValue";
 
 const Media = createContext<{ isMobile: boolean, isDesktop: boolean }>({
   isMobile: false,
@@ -12,17 +13,7 @@ const Media = createContext<{ isMobile: boolean, isDesktop: boolean }>({
 export const useIsMobile = () => useContext(Media);
 
 export const MediaProvider: FC<{ children?: ReactNode }> = ({ children }) => {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(getIsMobile());
-
-    handleResize();
-
-    window.addEventListener('resize', handleResize);
-
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const isMobile = useResizeValue(getIsMobile);
 
   return (
     <Media.Provider value={{

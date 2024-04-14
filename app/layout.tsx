@@ -59,13 +59,14 @@ export default function RootLayout({
         <MediaProvider>
           <NavProvider>
             <div className={clsx(
+              'max-w-[100vw]',
               'grid sm:p-6',
               'grid-rows-layout-mobile grid-cols-layout-mobile',
               'sm:grid-rows-layout-desktop sm:grid-cols-layout-desktop'
             )}>
               <Header />
               <SideNav />
-              <main className="p-6 flex flex-col gap-y-3 items-center sm:items-start">
+              <main className="p-6 flex flex-col gap-y-3 items-center sm:items-start max-w-full">
                 {children}
               </main>
             </div>

@@ -34,7 +34,7 @@ export default function About() {
       <h2 className="text-xl">
         About
       </h2>
-      <div className="flex flex-col gap-y-3 font-normal">
+      <div className="flex flex-col gap-y-3 font-normal max-w-full">
         <h3>Hi!</h3>
         <p>
           My name is Luke Schaack, and I am a:

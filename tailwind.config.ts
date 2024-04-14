@@ -44,7 +44,7 @@ const config: Config = {
         "layout-mobile": "minmax(64px, auto) auto",
       },
       gridTemplateColumns: {
-        "layout-desktop": "fit-content(200px) auto",
+        "layout-desktop": "fit-content(200px) minmax(0, 1fr)",
         "layout-mobile": "auto",
       },
       boxShadow: {

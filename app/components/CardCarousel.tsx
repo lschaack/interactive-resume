@@ -152,16 +152,27 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
     isMouseOver ? EasingDirection.UP : EasingDirection.DOWN
   );
 
+  // calculations for container sizing need to account for additional room for padding on either
+  // side of the card container, but I'm gonna be perfectly honest - this is an experimental
+  // value and I have no idea why it's `4 *` instead of `2 *`...best guess is the similarly 4px
+  // border, but explicitly setting box-sizing to 'border-box' doesn't seem to affect how large
+  // this value needs to be
+  const roomForPadding = 4 * gap;
+  const measuredUnscaledLength = containerElement.current
+    ? containerElement.current?.[isVertical ? 'offsetHeight' : 'offsetWidth'] - roomForPadding
+    : Infinity;
+
   const {
     totalCards,
     unscaledLength,
     sliceLength,
     positions,
     focusHandlers,
-    roomForPadding,
   } = useMemo(() => {
     const totalCards = Children.count(children);
-    const unscaledLength = totalCards * (basis + gap) - gap;
+    const computedUnscaledLength = totalCards * (basis + gap) - gap;
+    const unscaledLength = Math.min(measuredUnscaledLength, computedUnscaledLength);
+
     // percentage of total length taken up by cards
     const normTotalCardLength = totalCards * basis / unscaledLength;
     // percentage of total length taken up by gaps
@@ -172,12 +183,6 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
     // normed length of a single gap
     const normGapLength = normTotalGapLength / totalCards;
     const sliceLength = normCardLength + normGapLength;
-    // calculations for container sizing need to account for additional room for padding on either
-    // side of the card container, but I'm gonna be perfectly honest - this is an experimental
-    // value and I have no idea why it's `4 *` instead of `2 *`...best guess is the similarly 4px
-    // border, but explicitly setting box-sizing to 'border-box' doesn't seem to affect how large
-    // this value needs to be
-    const roomForPadding = 4 * gap;
 
     const positions: number[] = [];
     const focusHandlers: CardFocusContext[] = [];
@@ -208,25 +213,24 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
       sliceLength,
       positions,
       focusHandlers,
-      roomForPadding,
     }
-  }, [basis, gap, children]);
+  }, [basis, gap, children, measuredUnscaledLength]);
 
   const handleMouseMove: MouseEventHandler = useCallback(event => {
     if (containerElement.current) {
       if (isVertical) {
         const relativeY = event.pageY - containerElement.current.offsetTop;
-        const normY = relativeY / unscaledLength;
+        const normY = relativeY / containerElement.current.offsetHeight; // unscaledLength;
 
         setNormMousePosition(normY);
       } else {
         const relativeX = event.pageX - containerElement.current.offsetLeft;
-        const normX = relativeX / unscaledLength;
+        const normX = relativeX / containerElement.current.offsetWidth; // unscaledLength;
 
         setNormMousePosition(normX);
       }
     }
-  }, [isVertical, unscaledLength]);
+  }, [isVertical]);
 
   const parentCrossAxisLength = containerElement?.current?.parentElement?.getBoundingClientRect()[isVertical ? 'width' : 'height'];
   // if SCALE would push beyond the bounds of the container,
@@ -259,6 +263,9 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
   // when scaling, set cross axis to the maximum scale to minimize reflow (eased)
   const crossAxisLength = (1 + easingFactor * Math.abs(1 - maxAvailableScale)) * basis;
 
+  // TODO: turn this flexbox into a grid and use minmax(100%, unscaledLength + roomForPadding) for col/row
+  // TODO: reset shift on resize
+
   return (
     <ul
       ref={containerElement}
@@ -272,7 +279,7 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
       )}
       style={{
         // container has an additional gap on each side for padding
-        [isVertical ? 'maxHeight' : 'maxWidth']: unscaledLength + roomForPadding
+        [isVertical ? 'maxHeight' : 'maxWidth']: '100%', // unscaledLength + roomForPadding,
       }}
     >
       <div

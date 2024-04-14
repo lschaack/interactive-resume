@@ -50,7 +50,7 @@ export default function RootLayout({
       materialSymbols.variable,
       noto_sans.variable,
       noto_sans_mono.variable,
-      'transition-colors font-semibold'
+      'transition-colors font-semibold overflow-scroll'
     )}>
       <body className={clsx(
         'font-sans bg-background text-foreground',

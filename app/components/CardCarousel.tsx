@@ -21,7 +21,7 @@ import {
   easeOutSine as _easeOutSine,
   inverseEaseOutSine as _inverseEaseOutSine
 } from "@/utils/easingFunctions";
-import { compressRangeSymmetric } from "@/utils/ranges";
+import { compressRangeSymmetric, constrainRangeSymmetric } from "@/utils/ranges";
 
 export enum EasingDirection {
   UP,
@@ -218,15 +218,15 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
         const relativeY = event.pageY - containerElement.current.offsetTop;
         const normY = relativeY / unscaledLength;
 
-        setNormMousePosition(normY);
+        setNormMousePosition(constrainRangeSymmetric(normY, sliceLength));
       } else {
         const relativeX = event.pageX - containerElement.current.offsetLeft;
         const normX = relativeX / unscaledLength;
 
-        setNormMousePosition(normX);
+        setNormMousePosition(constrainRangeSymmetric(normX, sliceLength));
       }
     }
-  }, [isVertical, unscaledLength]);
+  }, [isVertical, unscaledLength, sliceLength]);
 
   const parentCrossAxisLength = containerElement?.current?.parentElement?.getBoundingClientRect()[isVertical ? 'width' : 'height'];
   // if SCALE would push beyond the bounds of the container,
@@ -254,6 +254,8 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
   });
 
   const scaledLength = sizes.reduce((a, b) => a + b) + gap * (totalCards - 1);
+  // only begin shifting one half slice into the track so that the cards on the edges
+  // are able to reach their maximum size before being partially shifted out of view
   const shift = compressRangeSymmetric(normMousePosition, sliceLength) * (scaledLength - unscaledLength);
 
   // when scaling, set cross axis to the maximum scale to minimize reflow (eased)

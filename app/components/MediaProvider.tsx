@@ -13,7 +13,7 @@ const Media = createContext<{ isMobile: boolean, isDesktop: boolean }>({
 export const useIsMobile = () => useContext(Media);
 
 export const MediaProvider: FC<{ children?: ReactNode }> = ({ children }) => {
-  const isMobile = useResizeValue(getIsMobile);
+  const isMobile = useResizeValue(getIsMobile, false);
 
   return (
     <Media.Provider value={{

@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
+"use client";
 
-export const useResizeValue = <TValue>(getValue: () => TValue) => {
-  const [value, setValue] = useState<TValue>(getValue());
+import { useLayoutEffect, useState } from "react";
 
-  useEffect(() => {
+export const useResizeValue = <TValue>(getValue: () => TValue, initValue: TValue) => {
+  const [value, setValue] = useState<TValue>(initValue);
+
+  useLayoutEffect(() => {
     const handleResize = () => setValue(getValue());
+
+    handleResize();
 
     window.addEventListener('resize', handleResize);
 

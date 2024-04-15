@@ -27,7 +27,7 @@ const InternallyCaptionedImage: FC<InternallyCaptionedImageProps> = ({ children,
 }
 
 export default function About() {
-  const canFitFourCards = useResizeValue(() => window.matchMedia('(min-width: 1024px)').matches);
+  const canFitFourCards = useResizeValue(() => window?.matchMedia('(min-width: 1024px)').matches, true);
 
   return (
     <>

@@ -186,6 +186,8 @@ type MinesweeperContext = {
   setIsMouseDown: Dispatch<SetStateAction<boolean>>,
   flagMode: boolean,
   setFlagMode: Dispatch<SetStateAction<boolean>>,
+  isCreatingGame: boolean,
+  setIsCreatingGame: Dispatch<SetStateAction<boolean>>,
   isPlaying: boolean,
   board: MinesweeperBoard,
   resetBoard: () => void,
@@ -201,6 +203,8 @@ const MinesweeperState = createContext<MinesweeperContext>({
   setIsMouseDown: () => undefined,
   flagMode: false,
   setFlagMode: () => undefined,
+  isCreatingGame: false,
+  setIsCreatingGame: () => undefined,
   isPlaying: false,
   board: new MinesweeperBoard(0, 0, 0),
   resetBoard: () => undefined,
@@ -211,6 +215,7 @@ const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
   const [mines, setMines] = useState(INIT_MINES);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [flagMode, setFlagMode] = useState(false);
+  const [isCreatingGame, setIsCreatingGame] = useState(false);
   const [_, forceUpdate] = useReducer(x => x + 1, 0);
   const [board, setBoard] = useState(new MinesweeperBoard(width, height, mines, forceUpdate));
 
@@ -218,6 +223,7 @@ const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
     () => {
       setBoard(new MinesweeperBoard(width, height, mines, forceUpdate));
       setFlagMode(false);
+      setIsCreatingGame(false);
     },
     [width, height, mines, forceUpdate]
   );
@@ -242,6 +248,8 @@ const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
       setIsMouseDown,
       flagMode,
       setFlagMode,
+      isCreatingGame,
+      setIsCreatingGame,
       isPlaying,
       board,
       resetBoard,
@@ -412,14 +420,38 @@ const FlagMode = () => {
   );
 }
 
+const GameCreationMenu = () => {
+  const { isCreatingGame, setIsCreatingGame } = useContext(MinesweeperState);
+
+  return (
+    <button
+      className={clsx(
+        isCreatingGame ? MINESWEEPER_BORDER.inner : MINESWEEPER_BORDER.outer,
+        "flex justify-center align-center"
+      )}
+      onClick={() => setIsCreatingGame(prev => !prev)}
+    >
+      <Image
+        src="Menu.svg"
+        height={24}
+        width={24}
+        alt="Create a new game"
+      />
+    </button>
+  )
+}
+
 const MinesweeperHeader = () => {
   return (
     <div className="flex justify-between">
-      <MineCounter />
+      <div className="flex">
+        <GameCreationMenu />
+        <MineCounter />
+      </div>
       <Reaction />
       <div className="flex">
-        <FlagMode />
         <TimeTaken />
+        <FlagMode />
       </div>
     </div>
   )
@@ -432,6 +464,7 @@ const MinesweeperGame = () => {
     setHeight,
     setMines,
     resetBoard,
+    isCreatingGame,
   } = useContext(MinesweeperState);
 
   // TODO: just do some math instead of copy/pasting when I haven't already been coding for days...
@@ -459,40 +492,43 @@ const MinesweeperGame = () => {
   return (
     <MinesweeperBorder className="flex flex-col font-mono w-fit text-black">
       <MinesweeperHeader />
-      <div className="flex justify-between">
-        <ClosedTile
-          onClick={setEasy}
-          onContextMenu={() => undefined}
-          className="px-2"
-        >
-          easy
-        </ClosedTile>
-        <ClosedTile
-          onClick={setMedium}
-          onContextMenu={() => undefined}
-          className="px-2"
-        >
-          medium
-        </ClosedTile>
-        <ClosedTile
-          onClick={setHard}
-          onContextMenu={() => undefined}
-          className="px-2"
-        >
-          hard
-        </ClosedTile>
-      </div>
-      <MinesweeperSurface>
-        {board.board.map(row => (
-          row.map(tile => (
-            <MinesweeperTile
-              key={tile.key}
-              tile={tile}
-              board={board}
-            />
-          ))
-        ))}
-      </MinesweeperSurface>
+      {isCreatingGame ? (
+        <div className="flex justify-between">
+          <ClosedTile
+            onClick={setEasy}
+            onContextMenu={() => undefined}
+            className="px-2"
+          >
+            easy
+          </ClosedTile>
+          <ClosedTile
+            onClick={setMedium}
+            onContextMenu={() => undefined}
+            className="px-2"
+          >
+            medium
+          </ClosedTile>
+          <ClosedTile
+            onClick={setHard}
+            onContextMenu={() => undefined}
+            className="px-2"
+          >
+            hard
+          </ClosedTile>
+        </div>
+      ) : (
+        <MinesweeperSurface>
+          {board.board.map(row => (
+            row.map(tile => (
+              <MinesweeperTile
+                key={tile.key}
+                tile={tile}
+                board={board}
+              />
+            ))
+          ))}
+        </MinesweeperSurface>
+      )}
     </MinesweeperBorder>
   );
 }

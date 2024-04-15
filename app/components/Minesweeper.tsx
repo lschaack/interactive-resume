@@ -186,8 +186,8 @@ type MinesweeperContext = {
   setIsMouseDown: Dispatch<SetStateAction<boolean>>,
   flagMode: boolean,
   setFlagMode: Dispatch<SetStateAction<boolean>>,
-  isCreatingGame: boolean,
-  setIsCreatingGame: Dispatch<SetStateAction<boolean>>,
+  gameCreationMode: boolean,
+  setGameCreationMode: Dispatch<SetStateAction<boolean>>,
   isPlaying: boolean,
   board: MinesweeperBoard,
   resetBoard: () => void,
@@ -203,8 +203,8 @@ const MinesweeperState = createContext<MinesweeperContext>({
   setIsMouseDown: () => undefined,
   flagMode: false,
   setFlagMode: () => undefined,
-  isCreatingGame: false,
-  setIsCreatingGame: () => undefined,
+  gameCreationMode: false,
+  setGameCreationMode: () => undefined,
   isPlaying: false,
   board: new MinesweeperBoard(0, 0, 0),
   resetBoard: () => undefined,
@@ -215,7 +215,7 @@ const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
   const [mines, setMines] = useState(INIT_MINES);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [flagMode, setFlagMode] = useState(false);
-  const [isCreatingGame, setIsCreatingGame] = useState(false);
+  const [gameCreationMode, setGameCreationMode] = useState(false);
   const [_, forceUpdate] = useReducer(x => x + 1, 0);
   const [board, setBoard] = useState(new MinesweeperBoard(width, height, mines, forceUpdate));
 
@@ -223,7 +223,7 @@ const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
     () => {
       setBoard(new MinesweeperBoard(width, height, mines, forceUpdate));
       setFlagMode(false);
-      setIsCreatingGame(false);
+      setGameCreationMode(false);
     },
     [width, height, mines, forceUpdate]
   );
@@ -248,8 +248,8 @@ const MinesweeperProvider: FC<{ children?: ReactNode }> = ({ children }) => {
       setIsMouseDown,
       flagMode,
       setFlagMode,
-      isCreatingGame,
-      setIsCreatingGame,
+      gameCreationMode,
+      setGameCreationMode,
       isPlaying,
       board,
       resetBoard,
@@ -420,16 +420,16 @@ const FlagMode = () => {
   );
 }
 
-const GameCreationMenu = () => {
-  const { isCreatingGame, setIsCreatingGame } = useContext(MinesweeperState);
+const GameCreationMode = () => {
+  const { gameCreationMode, setGameCreationMode } = useContext(MinesweeperState);
 
   return (
     <button
       className={clsx(
-        isCreatingGame ? MINESWEEPER_BORDER.inner : MINESWEEPER_BORDER.outer,
+        gameCreationMode ? MINESWEEPER_BORDER.inner : MINESWEEPER_BORDER.outer,
         "flex justify-center align-center"
       )}
-      onClick={() => setIsCreatingGame(prev => !prev)}
+      onClick={() => setGameCreationMode(prev => !prev)}
     >
       <Image
         src="Menu.svg"
@@ -445,7 +445,7 @@ const MinesweeperHeader = () => {
   return (
     <div className="flex justify-between">
       <div className="flex">
-        <GameCreationMenu />
+        <GameCreationMode />
         <MineCounter />
       </div>
       <Reaction />
@@ -464,7 +464,7 @@ const MinesweeperGame = () => {
     setHeight,
     setMines,
     resetBoard,
-    isCreatingGame,
+    gameCreationMode,
   } = useContext(MinesweeperState);
 
   // TODO: just do some math instead of copy/pasting when I haven't already been coding for days...
@@ -492,7 +492,7 @@ const MinesweeperGame = () => {
   return (
     <MinesweeperBorder className="flex flex-col font-mono w-fit text-black">
       <MinesweeperHeader />
-      {isCreatingGame ? (
+      {gameCreationMode ? (
         <div className="flex justify-between">
           <ClosedTile
             onClick={setEasy}

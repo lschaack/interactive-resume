@@ -31,7 +31,6 @@ const ClosedTile: FC<TileProps & { children?: ReactNode }> = ({ onClick, onConte
         'border-4 border-solid',
         'border-l-slate-200 border-t-slate-200',
         'border-r-slate-500 border-b-slate-500',
-        '[&:not(.flag)]:active:border-2 [&:not(.flag)]:active:p-[2px]',
         '[&:not(.flag)]:active:border-l-slate-500 [&:not(.flag)]:active:border-t-slate-500',
         '[&:not(.flag)]:active:border-r-slate-300 [&:not(.flag)]:active:border-b-slate-300',
         // TODO: focus styles
@@ -92,14 +91,13 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
 
     if (tile.isOpen) {
       if (tile.isMine) {
-        // TODO: culprit mine
         const icon = tile.isFlag ? 'MineWrong' : 'Mine';
 
         return (
           <OpenTile
             onClick={handleLeftClick}
             onContextMenu={handleRightClick}
-            className={clsx(tile.isCulprit && 'bg-red-500')}
+            className={clsx(tile.isCulprit && '!bg-red-500')}
           >
             <Image
               src={`${icon}.svg`}

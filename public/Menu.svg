@@ -62,7 +62,6 @@
 <path d="M40.5 42L42 40.5L43 43L40.5 42Z" stroke="black"/>
 <path d="M35 32.5C35 33.3284 34.3284 34 33.5 34C32.6716 34 32 33.3284 32 32.5C32 31.6716 32.6716 31 33.5 31C34.3284 31 35 31.6716 35 32.5Z" fill="white"/>
 </g>
-<rect x="0.5" y="0.5" width="47" height="47" stroke="black"/>
 <defs>
 <clipPath id="clip0_24_2">
 <rect width="48" height="48" fill="white"/>

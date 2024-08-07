@@ -89,7 +89,13 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
     const handleLeftClick = flagMode ? handleContextMenu : handleClick;
     const handleRightClick = flagMode ? handleClick : handleContextMenu;
 
-    if (tile.isOpen) {
+    if (tile.isGlasses) {
+      return (
+        <ClosedTile className="px-1" onClick={() => undefined} onContextMenu={() => undefined}>
+          😎
+        </ClosedTile>
+      );
+    } else if (tile.isOpen) {
       if (tile.isMine) {
         const icon = tile.isFlag ? 'MineWrong' : 'Mine';
 

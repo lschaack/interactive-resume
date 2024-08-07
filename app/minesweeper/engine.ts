@@ -1,5 +1,7 @@
 import { inRange } from 'lodash/fp';
 
+const SKIP_FRAMES = 8;
+
 export class Tile {
   col: number;
   row: number;
@@ -9,6 +11,7 @@ export class Tile {
   isMine: boolean;
   isFlag: boolean;
   isCulprit: boolean;
+  isGlasses: boolean;
 
   constructor(row: number, col: number) {
     this.col = col;
@@ -18,6 +21,7 @@ export class Tile {
     this.isMine = false;
     this.isFlag = false;
     this.isCulprit = false;
+    this.isGlasses = false;
   }
 
   get cell(): Cell {
@@ -57,6 +61,12 @@ export class MinesweeperBoard {
   status: 'won' | 'lost' | 'playing';
   onChange?: () => void;
   nFlaggedMines: number;
+  // for animations
+  currentTile: Tile;
+  currentFrame: number;
+  currentMoveIndex = Math.floor(Math.random() * Object.keys(MOVES).length);
+  tileQueue: Tile[];
+  tileQueueLength = 30;
 
   mines: Set<Tile>;
   flags: Set<Tile>;
@@ -96,18 +106,54 @@ export class MinesweeperBoard {
       )
     )
 
+    this.currentTile = this.getRandomTile();
+    this.currentFrame = 0;
+    this.tileQueue = new Array(this.tileQueueLength);
+
     this.closed = new Set<Tile>(this.board.flatMap(row => row));
 
     this.setMines();
   }
 
+  // TODO: this gets called a bizarre number of times on init...why?
+  getRandomTile() {
+    const row = Math.floor(Math.random() * this.height);
+    const col = Math.floor(Math.random() * this.width);
+
+    return this.board[row]?.[col];
+  }
+
+  getRandomMove() {
+    const allMoves = Object.values(MOVES);
+
+    return allMoves[Math.floor(Math.random() * allMoves.length)];
+  }
+
+  // FIXME: this sometimes doesn't start
+  getSnakingTile(): Tile {
+    const nextMoveIndexDirection = Math.floor(Math.random() * 3) - 1; // should be -1, 0, or 1
+    const nextMoveIndex = this.currentMoveIndex + nextMoveIndexDirection;
+    this.currentMoveIndex = nextMoveIndex;
+
+    const move = Object.values(MOVES).at(nextMoveIndex % Object.values(MOVES).length)!;
+    const nextRow = this.currentTile.row + move[0];
+    const nextCol = this.currentTile.col + move[1];
+
+    if (this.isValidCell([nextRow, nextCol]) && !this.board[nextRow][nextCol].isFlag) {
+      const nextTile = this.board[nextRow][nextCol];
+  
+      this.currentTile = nextTile;
+  
+      return nextTile;
+    } else {
+      // TODO: something better than a potentially infinite retry
+      return this.getSnakingTile();
+    }
+  }
+
   setMines() {
     while (this.mines.size < this.nMines) {
-      // TODO: check that this gets every cell
-      const row = Math.floor(Math.random() * this.height);
-      const col = Math.floor(Math.random() * this.width);
-
-      const chosenTile = this.board[row][col];
+      const chosenTile = this.getRandomTile();
 
       if (!chosenTile.isMine) {
         chosenTile.isMine = true;
@@ -154,7 +200,7 @@ export class MinesweeperBoard {
   }
 
   flag(tile: Tile) {
-    if (!tile.isOpen) {
+    if (!tile.isOpen && this.status !== 'won') {
       tile.isFlag = !tile.isFlag;
   
       if (tile.isFlag) this.flags.add(tile);
@@ -168,6 +214,13 @@ export class MinesweeperBoard {
       this.checkWinCondition();
   
       this.onChange?.();
+    }
+  }
+
+  doClose(tile: Tile) {
+    if (!tile.isFlag) {
+      tile.isOpen = false;
+      this.closed.add(tile);
     }
   }
 
@@ -226,8 +279,41 @@ export class MinesweeperBoard {
   }
 
   win() {
-    this.status = 'won';
+    if (this.status !== 'won') {
+      this.status = 'won';
+  
+      this.onChange?.();
+  
+      return this.doWinAnimation();
+    }
+  }
 
-    this.onChange?.();
+  doWinAnimation() {
+    return requestAnimationFrame(() => {
+      // TODO: a less terrible way of slowing down this animation
+      if (this.currentFrame % SKIP_FRAMES === 0) {
+        const tileToFlip = this.getSnakingTile();
+  
+        this.doClose(tileToFlip);
+
+        // ########## head
+        tileToFlip.isGlasses = true;
+        if (this.tileQueue.at(-1)) this.tileQueue.at(-1)!.isGlasses = false;
+        // ########## /head
+
+        // TODO: need to refresh values' place in the queue when they're visited twice
+        this.tileQueue.push(tileToFlip);
+        const unFlip = this.tileQueue.shift();
+        // TODO: make this not take ages
+        const isUnflipStillInQueue = unFlip && this.tileQueue.some(tile => tile.id === unFlip.id);
+        if (unFlip && !isUnflipStillInQueue) this.doOpen(unFlip);
+  
+        this.onChange?.();
+      }
+
+      this.currentFrame += 1;
+
+      this.doWinAnimation();
+    })
   }
 }

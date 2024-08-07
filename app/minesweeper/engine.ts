@@ -176,16 +176,15 @@ export class MinesweeperBoard {
       tile.isOpen = true;
       this.closed.delete(tile);
 
-      if (tile.isMine) this.lose();
+      if (tile.isMine && this.status !== 'lost') this.lose();
     }
   }
 
   // Opens recursively if applicable, doOpen does the actual work
-  // FIXME: rules for when a square is open-able are seemingly broken
-  open(tile: Tile, visited = new Set<string>()) {
+  open(tile: Tile, visited = new Set<Tile>()) {
     if (!tile.isFlag) {
       this.doOpen(tile);
-      visited.add(tile.id);
+      visited.add(tile);
   
       const numNeighborMines = this.neighborMines[tile.row][tile.col];
   
@@ -194,8 +193,7 @@ export class MinesweeperBoard {
         this
           .neighbors[tile.row][tile.col]
           .forEach(neighbor => {
-            if (!visited.has(neighbor.id) && !neighbor.isOpen) {
-              // TODO: define boundary where this stops
+            if (!visited.has(neighbor) && !neighbor.isOpen) {
               this.open(neighbor, visited);
             }
           })
@@ -218,13 +216,8 @@ export class MinesweeperBoard {
     if (isEveryMineFlagged && isEverythingElseOpen) this.win();
   }
 
-  // TODO: this will re-render twice since it gets called from doOpen...
-  // not a big issue but is there any chance I would need to call lose()
-  // from any other context?
   lose() {
     this.status = 'lost';
-    // reveal all mines on loss
-    // FIXME: handle correct/incorrect flags
     this.mines.forEach(tile => {
       if (!tile.isOpen) this.doOpen(tile);
     });
@@ -232,7 +225,6 @@ export class MinesweeperBoard {
     this.onChange?.();
   }
 
-  // TODO: call win
   win() {
     this.status = 'won';
 

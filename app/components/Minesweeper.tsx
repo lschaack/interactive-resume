@@ -108,7 +108,7 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
           </OpenTile>
         );
       } else {
-        const numSurroundingMines = board.getNeighborMines(tile).length;
+        const numSurroundingMines = board.neighborMines[tile.row][tile.col];
         // don't show anything for 0
         const contents = numSurroundingMines || null;
 

@@ -48,6 +48,8 @@ const addCells = ([rowA, colA]: Cell, [rowB, colB]: Cell): Cell => [rowA + rowB,
 
 export class MinesweeperBoard {
   board: Tile[][];
+  neighbors: Tile[][][];
+  neighborMines: number[][];
   height: number;
   width: number;
   size: number;
@@ -78,6 +80,20 @@ export class MinesweeperBoard {
       )
     );
 
+    this.neighbors = this.board.map(row =>
+      row.map(tile =>
+        this._getNeighbors(tile)
+      )
+    );
+
+    this.neighborMines = this.neighbors.map(row =>
+      row.map(neighbors =>
+        neighbors
+          .filter(neighbor => neighbor.isMine)
+          .length
+      )
+    )
+
     this.closed = new Set<Tile>(this.board.flatMap(row => row));
 
     this.setMines();
@@ -97,6 +113,15 @@ export class MinesweeperBoard {
         this.mines.add(chosenTile);
       }
     }
+
+    // set neighbor mines whenever setting mines
+    this.neighborMines = this.neighbors.map(row =>
+      row.map(neighbors =>
+        neighbors
+          .filter(neighbor => neighbor.isMine)
+          .length
+      )
+    )
   }
 
   isValidCell([row, col]: Cell) {
@@ -115,26 +140,15 @@ export class MinesweeperBoard {
     }
   }
 
-  // TODO: memoize
-  getNeighbors(tile: Tile) {
+  _getNeighbors(tile: Tile) {
     return Object
       .keys(MOVES)
       .map(direction => this.getNeighbor(tile, direction as Direction))
       .filter(Boolean) as Tile[];
   }
 
-  // TODO: memoize
-  getNeighborMines(tile: Tile) {
-    return this
-      .getNeighbors(tile)
-      .filter(mine => mine.isMine);
-  }
-
-  // TODO: memoize
   getNeighborFlags(tile: Tile) {
-    return this
-      .getNeighbors(tile)
-      .filter(mine => mine.isFlag);
+    return this.neighbors[tile.row][tile.col].filter(mine => mine.isFlag);
   }
 
   flag(tile: Tile) {
@@ -166,12 +180,12 @@ export class MinesweeperBoard {
       this.doOpen(tile);
       visited.add(tile.id);
   
-      const numNeighborMines = this.getNeighborMines(tile).length;
+      const numNeighborMines = this.neighborMines[tile.row][tile.col];
   
       if (numNeighborMines === 0 || numNeighborMines === this.getNeighborFlags(tile).length) {
         // Open all neighbors
         this
-          .getNeighbors(tile)
+          .neighbors[tile.row][tile.col]
           .forEach(neighbor => {
             if (!visited.has(neighbor.id) && !neighbor.isOpen) {
               // TODO: define boundary where this stops

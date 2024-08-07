@@ -56,6 +56,7 @@ export class MinesweeperBoard {
   nMines: number;
   status: 'won' | 'lost' | 'playing';
   onChange?: () => void;
+  nFlaggedMines: number;
 
   mines: Set<Tile>;
   flags: Set<Tile>;
@@ -66,6 +67,7 @@ export class MinesweeperBoard {
     this.width = width;
     this.size = this.height * this.width;
     this.nMines = nMines;
+    this.nFlaggedMines = 0;
     this.status = 'playing';
     this.onChange = onChange;
 
@@ -157,6 +159,11 @@ export class MinesweeperBoard {
   
       if (tile.isFlag) this.flags.add(tile);
       else this.flags.delete(tile);
+
+      if (tile.isMine) {
+        if (tile.isFlag) this.nFlaggedMines += 1;
+        else this.nFlaggedMines -= 1;
+      }
   
       this.checkWinCondition();
   
@@ -205,10 +212,10 @@ export class MinesweeperBoard {
   }
 
   checkWinCondition() {
-    const isEveryMineFlagged = [...this.mines].every(mine => this.flags.has(mine));
-    const isEveryClosedTileAFlag = [...this.closed].every(mine => this.flags.has(mine));
+    const isEveryMineFlagged = this.nFlaggedMines === this.nMines;
+    const isEverythingElseOpen = this.closed.size === this.nMines;
 
-    if (isEveryMineFlagged && isEveryClosedTileAFlag) this.win();
+    if (isEveryMineFlagged && isEverythingElseOpen) this.win();
   }
 
   // TODO: this will re-render twice since it gets called from doOpen...

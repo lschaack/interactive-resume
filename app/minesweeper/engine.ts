@@ -1,3 +1,4 @@
+import { sample } from 'lodash';
 import { inRange } from 'lodash/fp';
 
 const SKIP_FRAMES = 8;
@@ -48,7 +49,11 @@ const MOVES: Record<Direction, Cell> = {
   NW: [-1, -1],
 };
 
+const MOVE_CELLS: Cell[] = Object.values(MOVES); // should be insert order for expected behavior
+
 const addCells = ([rowA, colA]: Cell, [rowB, colB]: Cell): Cell => [rowA + rowB, colA + colB];
+const areCellsEqual = ([rowA, colA]: Cell, [rowB, colB]: Cell): boolean => rowA === rowB && colA === colB;
+const getApproxCellDistance = ([rowA, colA]: Cell, [rowB, colB]: Cell) => Math.abs(rowB - rowA + colB - colA);
 
 export class MinesweeperBoard {
   board: Tile[][];
@@ -64,9 +69,9 @@ export class MinesweeperBoard {
   // for animations
   currentTile: Tile;
   currentFrame: number;
-  currentMoveIndex = Math.floor(Math.random() * Object.keys(MOVES).length);
-  tileQueue: Tile[];
-  tileQueueLength = 30;
+  currentMove = sample(MOVE_CELLS)!;
+  snakeQueue: Tile[];
+  snakeLength = 30;
 
   mines: Set<Tile>;
   flags: Set<Tile>;
@@ -108,7 +113,7 @@ export class MinesweeperBoard {
 
     this.currentTile = this.getRandomTile();
     this.currentFrame = 0;
-    this.tileQueue = new Array(this.tileQueueLength);
+    this.snakeQueue = new Array(this.snakeLength);
 
     this.closed = new Set<Tile>(this.board.flatMap(row => row));
 
@@ -129,26 +134,55 @@ export class MinesweeperBoard {
     return allMoves[Math.floor(Math.random() * allMoves.length)];
   }
 
-  // FIXME: this sometimes doesn't start
+  chooseBestMove(options: Cell[]) {
+    const validMoves = options
+      .map(move => ({ move, destination: addCells(this.currentTile.cell, move) }))
+      .filter(({ destination }) => this.isValidCell(destination))
+      .filter(({ destination: [row, col] }) => !this.board[row][col].isFlag);
+
+    if (!validMoves.length) return undefined;
+
+    // prefer cells that aren't occupied
+    const [preferred, other] = validMoves.reduce<[Cell[], Cell[]]>((acc, { move, destination }) => {
+      // FIXME: speed this up w/Set
+      const isDestinationOccupied = this.snakeQueue.some(tile => areCellsEqual(destination, tile.cell));
+
+      if (isDestinationOccupied) acc[1].push(move);
+      else acc[0].push(move);
+
+      return acc;
+    }, [[], []]);
+
+    if (preferred.length) return sample(preferred);
+    else return sample(other);
+  }
+
   getSnakingTile(): Tile {
-    const nextMoveIndexDirection = Math.floor(Math.random() * 3) - 1; // should be -1, 0, or 1
-    const nextMoveIndex = this.currentMoveIndex + nextMoveIndexDirection;
-    this.currentMoveIndex = nextMoveIndex;
+    // sort moves into those close to the current move (in the current compass direction or one away)
+    // and those that are far from the current move, cause snakes turn slow
+    const [preferredMoves, otherMoves] = MOVE_CELLS.reduce<[Cell[], Cell[]]>((acc, move) => {
+      const distanceFromCurrentMove = getApproxCellDistance(move, this.currentMove);
+      if (distanceFromCurrentMove < 2) {
+        acc[0].push(move);
+        // stupid way to increase probability of current direction
+        if (distanceFromCurrentMove < 1) acc[0].push(move)
+      } else {
+        acc[1].push(move);
+      }
 
-    const move = Object.values(MOVES).at(nextMoveIndex % Object.values(MOVES).length)!;
-    const nextRow = this.currentTile.row + move[0];
-    const nextCol = this.currentTile.col + move[1];
+      return acc;
+    }, [[], []]);
 
-    if (this.isValidCell([nextRow, nextCol]) && !this.board[nextRow][nextCol].isFlag) {
-      const nextTile = this.board[nextRow][nextCol];
-  
-      this.currentTile = nextTile;
-  
-      return nextTile;
-    } else {
-      // TODO: something better than a potentially infinite retry
-      return this.getSnakingTile();
-    }
+    // choose nearest move to a valid cell that is not flagged,
+    // preferring cells not already occupied by snakes
+    const chosenMove = this.chooseBestMove(preferredMoves) || this.chooseBestMove(otherMoves)!;
+    const [nextRow, nextCol] = addCells(this.currentTile.cell, chosenMove);
+    const nextTile = this.board[nextRow][nextCol];
+
+    this.currentMove = chosenMove;
+    this.currentTile = nextTile;
+
+    return nextTile;
   }
 
   setMines() {
@@ -280,40 +314,65 @@ export class MinesweeperBoard {
 
   win() {
     if (this.status !== 'won') {
+      console.log('winning')
       this.status = 'won';
   
       this.onChange?.();
   
-      return this.doWinAnimation();
+      return this.startWinAnimation();
     }
   }
 
-  doWinAnimation() {
-    return requestAnimationFrame(() => {
-      // TODO: a less terrible way of slowing down this animation
-      if (this.currentFrame % SKIP_FRAMES === 0) {
-        const tileToFlip = this.getSnakingTile();
-  
-        this.doClose(tileToFlip);
+  doWinAnimation = () => {
+    // TODO: a less terrible way of slowing down this animation
+    if (this.currentFrame % SKIP_FRAMES === 0) {
+      const tileToFlip = this.getSnakingTile();
 
-        // ########## head
-        tileToFlip.isGlasses = true;
-        if (this.tileQueue.at(-1)) this.tileQueue.at(-1)!.isGlasses = false;
-        // ########## /head
+      this.doClose(tileToFlip);
 
-        // TODO: need to refresh values' place in the queue when they're visited twice
-        this.tileQueue.push(tileToFlip);
-        const unFlip = this.tileQueue.shift();
-        // TODO: make this not take ages
-        const isUnflipStillInQueue = unFlip && this.tileQueue.some(tile => tile.id === unFlip.id);
-        if (unFlip && !isUnflipStillInQueue) this.doOpen(unFlip);
-  
-        this.onChange?.();
-      }
+      // ########## head
+      tileToFlip.isGlasses = true;
+      if (this.snakeQueue.at(-1)) this.snakeQueue.at(-1)!.isGlasses = false;
+      // ########## /head
 
-      this.currentFrame += 1;
+      // TODO: need to refresh values' place in the queue when they're visited twice
+      this.snakeQueue.push(tileToFlip);
+      const unFlip = this.snakeQueue.shift();
+      // TODO: make this not take ages
+      const isUnflipStillInQueue = unFlip && this.snakeQueue.some(tile => tile.id === unFlip.id);
+      if (unFlip && !isUnflipStillInQueue) this.doOpen(unFlip);
 
-      this.doWinAnimation();
-    })
+      this.onChange?.();
+    }
+
+    this.currentFrame += 1;
+
+    requestAnimationFrame(this.doWinAnimation);
+  }
+
+  startWinAnimation() {
+    requestAnimationFrame(this.doWinAnimation);
+  }
+
+  autoWin() {
+    this.nFlaggedMines = 0;
+    this.closed.clear();
+
+    this.board.forEach(row => {
+      row.forEach(tile => {
+        if (tile.isMine) {
+          tile.isFlag = true;
+          tile.isOpen = false;
+
+          this.nFlaggedMines += 1;
+          this.closed.add(tile)
+        } else {
+          tile.isFlag = false;
+          tile.isOpen = true;
+        }
+      })
+    });
+
+    this.checkWinCondition();
   }
 }

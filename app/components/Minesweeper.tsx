@@ -178,9 +178,9 @@ const MinesweeperTile: FC<{ tile: Tile; board: MinesweeperBoard }> = memo(
   )
 );
 
-const INIT_WIDTH = 10;
-const INIT_HEIGHT = 10;
-const INIT_MINES = 10;
+const INIT_WIDTH = 10; // 20;
+const INIT_HEIGHT = 10; // 20;
+const INIT_MINES = 10; // 60;
 type MinesweeperContext = {
   width: number,
   setWidth: Dispatch<SetStateAction<number>>,
@@ -370,6 +370,16 @@ const Reaction = () => {
   );
 }
 
+const AutoWin = () => {
+  const { board } = useContext(MinesweeperState);
+
+  return (
+    <ClosedTile className="px-1" onClick={() => board.autoWin()} onContextMenu={() => undefined}>
+      🎆
+    </ClosedTile>
+  );
+}
+
 const TimeTaken = () => {
   const { isPlaying, board } = useContext(MinesweeperState);
   const [startTime, setStartTime] = useState(0);
@@ -455,6 +465,7 @@ const MinesweeperHeader = () => {
         <MineCounter />
       </div>
       <Reaction />
+      <AutoWin />
       <div className="flex">
         <TimeTaken />
         <FlagMode />

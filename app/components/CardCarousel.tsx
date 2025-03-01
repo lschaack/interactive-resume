@@ -234,29 +234,25 @@ export const CardCarousel: FC<CardCarouselProps> = ({ children, direction = 'hor
   const maxAvailableScale = parentCrossAxisLength
     ? Math.min(SCALE, parentCrossAxisLength / (basis + roomForPadding))
     : SCALE;
-  // SCALE_FACTOR is how much SCALE needs to decrease to get to MIN_SCALE at max distance
   const scaleFactor = maxAvailableScale - MIN_SCALE;
 
   const sizes = positions.map(normCardPosition => {
     const distance = Math.abs(normMousePosition - normCardPosition);
     // linear falloff over the length of FALLOFF slices
     // scaleAdjust is a value from:
-    // - 0 when mouse position is at card position
-    // - to 1 when mouse position is at or beyond FALLOFF * sliceLength
-    const scaleAdjust = Math.min(distance, FALLOFF * sliceLength) / (FALLOFF * sliceLength);
-    const scale = maxAvailableScale - scaleFactor * scaleAdjust;
-    // find difference between 1 and scale for easing -
-    // this way I can blend in the effects of the scaling over the duration of the easing curve
-    const scaleDifference = Math.abs(1 - scale);
+    // - 1 when mouse position is at card position
+    // - to 0 when mouse position is at or beyond FALLOFF * sliceLength
+    const normScale = 1 - Math.min(distance, FALLOFF * sliceLength) / (FALLOFF * sliceLength);
+    const scale = scaleFactor * normScale;
 
     // easingFactor will automatically send scaling factor to 0 when direction changes
-    return (1 + easingFactor * scaleDifference) * basis;
+    return (1 + easingFactor * scale) * basis;
   });
 
   const scaledLength = sizes.reduce((a, b) => a + b) + gap * (totalCards - 1);
   // only begin shifting one half slice into the track so that the cards on the edges
   // are able to reach their maximum size before being partially shifted out of view
-  const shift = compressRangeSymmetric(normMousePosition, sliceLength) * (scaledLength - unscaledLength);
+  const shift = normMousePosition * (scaledLength - unscaledLength);
 
   // when scaling, set cross axis to the maximum scale to minimize reflow (eased)
   const crossAxisLength = (1 + easingFactor * Math.abs(1 - maxAvailableScale)) * basis;
